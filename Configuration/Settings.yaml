@@ -1,0 +1,13 @@
+# Replace the controller of the existing Management > Workspaces module.
+# The module path stays "management/workspaces", so all existing privilege
+# targets and menu entries keep working; only the implementation is swapped.
+Neos:
+  Neos:
+    modules:
+      management:
+        submodules:
+          workspaces:
+            controller: 'CodeQ\WorkspaceReview\Controller\Module\Management\WorkspacesController'
+            additionalResources:
+              styleSheets:
+                - 'resource://CodeQ.WorkspaceReview/Public/Styles/WorkspaceReview.css'

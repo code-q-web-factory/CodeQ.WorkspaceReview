@@ -1,0 +1,19 @@
+# The module's ModulePrivilege builds its method matcher from the controller
+# configured in Settings.yaml — which now points to the CodeQ.WorkspaceReview
+# controller. Because that controller extends the Neos core controller, the
+# inherited action methods still carry the core class' policy interception,
+# which would deny access (only "Neos.Neos:AllControllerActions" matches there
+# and abstains). This target restores the grant on the core controller's
+# actions for the same role that holds the module access grant in Neos.Neos.
+privilegeTargets:
+  'Neos\Flow\Security\Authorization\Privilege\Method\MethodPrivilege':
+    'CodeQ.WorkspaceReview:CoreWorkspacesControllerActions':
+      label: Access to the inherited core workspace controller actions
+      matcher: 'method(public Neos\Neos\Controller\Module\Management\WorkspacesController->(?!initialize).*Action())'
+
+roles:
+  'Neos.Neos:AbstractEditor':
+    privileges:
+      -
+        privilegeTarget: 'CodeQ.WorkspaceReview:CoreWorkspacesControllerActions'
+        permission: GRANT

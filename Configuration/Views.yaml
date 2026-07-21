@@ -1,0 +1,18 @@
+# Because the module sub-request now belongs to this package, Fluid resolves
+# templates from this package by default. This entry adds Neos.Neos as a
+# fallback so untouched actions (Index, New, Edit) keep using the core
+# templates, and provides the shared layout and partials from Neos.Neos.
+# Note: Flow applies only the single highest-weight matching entry, so this
+# entry must carry the complete set of root paths. Paths are searched in
+# order, first match wins.
+-
+  requestFilter: 'isPackage("CodeQ.WorkspaceReview") && isController("Module\\Management\\Workspaces")'
+  options:
+    templateRootPaths:
+      'CodeQ.WorkspaceReview': 'resource://CodeQ.WorkspaceReview/Private/Templates'
+      'Neos.Neos': 'resource://Neos.Neos/Private/Templates'
+    partialRootPaths:
+      'CodeQ.WorkspaceReview': 'resource://CodeQ.WorkspaceReview/Private/Partials'
+      'Neos.Neos': 'resource://Neos.Neos/Private/Partials'
+    layoutRootPaths:
+      'Neos.Neos': 'resource://Neos.Neos/Private/Layouts'

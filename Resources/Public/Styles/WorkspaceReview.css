@@ -1,0 +1,152 @@
+/* Change-card styling for the workspace review module. All rules are scoped
+   to codeq-review- classes so the core module styling stays untouched. */
+
+.codeq-review-summary {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999999;
+}
+
+.codeq-review-change__header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 0 8px;
+}
+
+.codeq-review-change__label {
+    font-weight: bold;
+}
+
+.codeq-review-change__meta {
+    margin-left: auto;
+    font-size: 12px;
+    color: #999999;
+    white-space: nowrap;
+}
+
+.codeq-review-badge {
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+.codeq-review-badge--created {
+    background: rgba(0, 170, 90, 0.25);
+    color: #8fe0b7;
+}
+
+.codeq-review-badge--deleted {
+    background: rgba(255, 70, 70, 0.25);
+    color: #ffa3a3;
+}
+
+.codeq-review-badge--moved {
+    background: rgba(240, 160, 30, 0.25);
+    color: #f0c882;
+}
+
+.codeq-review-badge--hidden {
+    background: rgba(150, 150, 150, 0.25);
+    color: #bbbbbb;
+}
+
+.codeq-review-property {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.codeq-review-property__label {
+    flex: 0 0 160px;
+    font-size: 12px;
+    color: #999999;
+}
+
+.codeq-review-property__value {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.codeq-review-text {
+    line-height: 1.6;
+}
+
+.codeq-review-text ins {
+    background: rgba(0, 170, 90, 0.28);
+    color: #b5ecd1;
+    text-decoration: none;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.codeq-review-text del {
+    background: rgba(255, 70, 70, 0.24);
+    color: #ffc2c2;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.codeq-review-ellipsis {
+    color: #777777;
+    padding: 0 4px;
+}
+
+.codeq-review-pill {
+    display: inline-block;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 1px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.codeq-review-pill--old {
+    background: rgba(255, 70, 70, 0.18);
+    color: #ffa3a3;
+    text-decoration: line-through;
+}
+
+.codeq-review-pill--new {
+    background: rgba(0, 170, 90, 0.2);
+    color: #8fe0b7;
+}
+
+.codeq-review-arrow {
+    margin: 0 6px;
+    color: #777777;
+}
+
+.codeq-review-media {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.codeq-review-media__item img {
+    max-width: 220px;
+    height: auto;
+    display: block;
+}
+
+.codeq-review-media__item--old img {
+    opacity: 0.6;
+}
+
+.codeq-review-visibility {
+    color: #f0c882;
+}
+
+.codeq-review-note {
+    color: #999999;
+    font-style: italic;
+}

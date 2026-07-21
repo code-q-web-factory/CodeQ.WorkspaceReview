@@ -1,0 +1,20 @@
+{
+    "name": "codeq/workspace-review",
+    "type": "neos-package",
+    "description": "Human-readable workspace change review module for Neos CMS: word-level text diffs, editor-aware value labels, explicit visibility changes and per-page change summaries.",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "neos/neos": "^8.0",
+        "neos/diff": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CodeQ\\WorkspaceReview\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "CodeQ.WorkspaceReview"
+        }
+    }
+}

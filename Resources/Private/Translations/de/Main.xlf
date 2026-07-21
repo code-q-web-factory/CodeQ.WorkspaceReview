@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file original="" product-name="CodeQ.WorkspaceReview" source-language="en" target-language="de" datatype="plaintext">
+        <body>
+            <trans-unit id="value.yes" xml:space="preserve">
+                <source>Yes</source>
+                <target>Ja</target>
+            </trans-unit>
+            <trans-unit id="value.no" xml:space="preserve">
+                <source>No</source>
+                <target>Nein</target>
+            </trans-unit>
+            <trans-unit id="value.empty" xml:space="preserve">
+                <source>empty</source>
+                <target>leer</target>
+            </trans-unit>
+            <trans-unit id="visibility.label" xml:space="preserve">
+                <source>Visibility</source>
+                <target>Sichtbarkeit</target>
+            </trans-unit>
+            <trans-unit id="visibility.hidden" xml:space="preserve">
+                <source>Element was hidden</source>
+                <target>Element wurde ausgeblendet</target>
+            </trans-unit>
+            <trans-unit id="visibility.shown" xml:space="preserve">
+                <source>Element was made visible</source>
+                <target>Element wurde eingeblendet</target>
+            </trans-unit>
+            <trans-unit id="change.noVisibleChanges" xml:space="preserve">
+                <source>No visible changes (internal update)</source>
+                <target>Keine sichtbaren Änderungen (interne Aktualisierung)</target>
+            </trans-unit>
+            <group id="summary.texts" restype="x-gettext-plurals">
+                <trans-unit id="summary.texts[0]" xml:space="preserve">
+                    <source>{0} text</source>
+                    <target>{0} Text</target>
+                </trans-unit>
+                <trans-unit id="summary.texts[1]" xml:space="preserve">
+                    <source>{0} texts</source>
+                    <target>{0} Texte</target>
+                </trans-unit>
+            </group>
+            <group id="summary.media" restype="x-gettext-plurals">
+                <trans-unit id="summary.media[0]" xml:space="preserve">
+                    <source>{0} media item</source>
+                    <target>{0} Medium</target>
+                </trans-unit>
+                <trans-unit id="summary.media[1]" xml:space="preserve">
+                    <source>{0} media items</source>
+                    <target>{0} Medien</target>
+                </trans-unit>
+            </group>
+            <group id="summary.settings" restype="x-gettext-plurals">
+                <trans-unit id="summary.settings[0]" xml:space="preserve">
+                    <source>{0} setting</source>
+                    <target>{0} Einstellung</target>
+                </trans-unit>
+                <trans-unit id="summary.settings[1]" xml:space="preserve">
+                    <source>{0} settings</source>
+                    <target>{0} Einstellungen</target>
+                </trans-unit>
+            </group>
+            <group id="summary.visibility" restype="x-gettext-plurals">
+                <trans-unit id="summary.visibility[0]" xml:space="preserve">
+                    <source>{0} visibility change</source>
+                    <target>{0} Sichtbarkeits-Änderung</target>
+                </trans-unit>
+                <trans-unit id="summary.visibility[1]" xml:space="preserve">
+                    <source>{0} visibility changes</source>
+                    <target>{0} Sichtbarkeits-Änderungen</target>
+                </trans-unit>
+            </group>
+            <group id="summary.newElements" restype="x-gettext-plurals">
+                <trans-unit id="summary.newElements[0]" xml:space="preserve">
+                    <source>{0} new element</source>
+                    <target>{0} neues Element</target>
+                </trans-unit>
+                <trans-unit id="summary.newElements[1]" xml:space="preserve">
+                    <source>{0} new elements</source>
+                    <target>{0} neue Elemente</target>
+                </trans-unit>
+            </group>
+            <group id="summary.deletedElements" restype="x-gettext-plurals">
+                <trans-unit id="summary.deletedElements[0]" xml:space="preserve">
+                    <source>{0} deleted element</source>
+                    <target>{0} gelöschtes Element</target>
+                </trans-unit>
+                <trans-unit id="summary.deletedElements[1]" xml:space="preserve">
+                    <source>{0} deleted elements</source>
+                    <target>{0} gelöschte Elemente</target>
+                </trans-unit>
+            </group>
+            <group id="summary.movedElements" restype="x-gettext-plurals">
+                <trans-unit id="summary.movedElements[0]" xml:space="preserve">
+                    <source>{0} moved element</source>
+                    <target>{0} verschobenes Element</target>
+                </trans-unit>
+                <trans-unit id="summary.movedElements[1]" xml:space="preserve">
+                    <source>{0} moved elements</source>
+                    <target>{0} verschobene Elemente</target>
+                </trans-unit>
+            </group>
+        </body>
+    </file>
+</xliff>

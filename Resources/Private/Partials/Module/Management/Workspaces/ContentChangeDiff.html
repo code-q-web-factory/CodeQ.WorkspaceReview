@@ -1,0 +1,126 @@
+{namespace neos=Neos\Neos\ViewHelpers}
+{namespace m=Neos\Media\ViewHelpers}
+{namespace review=CodeQ\WorkspaceReview\ViewHelpers}
+<div class="codeq-review-change">
+    <div class="codeq-review-change__header">
+        <f:if condition="{change.configuration.ui.icon}">
+            <i class="{change.configuration.ui.icon}" title="{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}" data-neos-toggle="tooltip"></i>
+        </f:if>
+        <span class="codeq-review-change__label"><review:cleanLabel value="{change.node.label}" /></span>
+        <f:if condition="{change.node.removed}">
+            <f:then>
+                <span class="codeq-review-badge codeq-review-badge--deleted">{neos:backend.translate(id: 'workspaces.legend.deleted', source: 'Modules', package: 'Neos.Neos')}</span>
+            </f:then>
+            <f:else>
+                <f:if condition="{change.isNew}">
+                    <f:then>
+                        <span class="codeq-review-badge codeq-review-badge--created">{neos:backend.translate(id: 'workspaces.legend.created', source: 'Modules', package: 'Neos.Neos')}</span>
+                    </f:then>
+                    <f:else>
+                        <f:if condition="{change.isMoved}">
+                            <span class="codeq-review-badge codeq-review-badge--moved">{neos:backend.translate(id: 'workspaces.legend.moved', source: 'Modules', package: 'Neos.Neos')}</span>
+                        </f:if>
+                        <f:if condition="{change.node.hidden}">
+                            <span class="codeq-review-badge codeq-review-badge--hidden">{neos:backend.translate(id: 'workspaces.legend.hidden', source: 'Modules', package: 'Neos.Neos')}</span>
+                        </f:if>
+                    </f:else>
+                </f:if>
+            </f:else>
+        </f:if>
+        <f:if condition="{contentDimensions}">
+            <span class="codeq-review-change__dimensions">
+                <f:render partial="Module/Shared/NodeContentDimensionsInformation.html" arguments="{contentDimensions: contentDimensions, node: change.node}" />
+            </span>
+        </f:if>
+        <span class="codeq-review-change__meta" title="{neos:backend.translate(id: 'lastModification')}: {change.node.lastModificationDateTime -> f:format.date(format: 'Y-m-d H:i')}" data-neos-toggle="tooltip">
+            <i class="fas fa-clock"></i> {change.node.lastModificationDateTime -> m:format.relativeDate()}
+        </span>
+    </div>
+    <f:for each="{change.contentChanges}" as="contentChange">
+        <div class="codeq-review-property codeq-review-property--{contentChange.type}">
+            <f:if condition="{contentChange.propertyLabel}">
+                <div class="codeq-review-property__label">{contentChange.propertyLabel}</div>
+            </f:if>
+            <div class="codeq-review-property__value">
+                <f:if condition="{contentChange.type} === 'text'">
+                    <div class="codeq-review-text">{contentChange.diffHtml -> f:format.raw()}</div>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'value'">
+                    <span class="codeq-review-pill codeq-review-pill--old">{contentChange.original}</span>
+                    <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                    <span class="codeq-review-pill codeq-review-pill--new">{contentChange.changed}</span>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'datetime'">
+                    <span class="codeq-review-pill codeq-review-pill--old"><f:if condition="{contentChange.original}"><f:format.date format="d.m.Y H:i" date="{contentChange.original}" /></f:if></span>
+                    <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                    <span class="codeq-review-pill codeq-review-pill--new"><f:if condition="{contentChange.changed}"><f:format.date format="d.m.Y H:i" date="{contentChange.changed}" /></f:if></span>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'image'">
+                    <div class="codeq-review-media">
+                        <div class="codeq-review-media__item codeq-review-media__item--old">
+                            <f:render section="renderImage" arguments="{image: contentChange.original}" />
+                        </div>
+                        <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                        <div class="codeq-review-media__item codeq-review-media__item--new">
+                            <f:render section="renderImage" arguments="{image: contentChange.changed}" />
+                        </div>
+                    </div>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'asset'">
+                    <div class="codeq-review-media">
+                        <div class="codeq-review-media__item codeq-review-media__item--old">
+                            <f:if condition="{contentChange.original}">
+                                <f:render section="renderAssetLink" arguments="{asset: contentChange.original, mode: 'del'}" />
+                            </f:if>
+                        </div>
+                        <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                        <div class="codeq-review-media__item codeq-review-media__item--new">
+                            <f:if condition="{contentChange.changed}">
+                                <f:render section="renderAssetLink" arguments="{asset: contentChange.changed, mode: 'ins'}" />
+                            </f:if>
+                        </div>
+                    </div>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'visibility'">
+                    <span class="codeq-review-visibility">
+                        <i class="fas {f:if(condition: contentChange.hidden, then: 'fa-eye-slash', else: 'fa-eye')}"></i>
+                        {contentChange.message}
+                    </span>
+                </f:if>
+                <f:if condition="{contentChange.type} === 'note'">
+                    <span class="codeq-review-note">{contentChange.message}</span>
+                </f:if>
+            </div>
+        </div>
+    </f:for>
+</div>
+
+<f:section name="renderImage">
+    <f:if condition="{image}">
+        <f:then>
+            <f:if condition="{image -> neos:getType()} == 'string'">
+                <f:then>
+                    <span class="neos-label-important">{image}</span>
+                </f:then>
+                <f:else>
+                    <m:image image="{image}" allowCropping="false" maximumWidth="400" maximumHeight="400" alt=""/>
+                </f:else>
+            </f:if>
+        </f:then>
+        <f:else>
+            <span class="codeq-review-note">–</span>
+        </f:else>
+    </f:if>
+</f:section>
+<f:section name="renderAssetLink">
+    <f:if condition="{asset}">
+        <f:if condition="{asset -> neos:getType()} == 'string'">
+            <f:then>
+                <span class="neos-label-important">{asset}</span>
+            </f:then>
+            <f:else>
+                <{mode}><a href="{f:uri.resource(resource: asset.resource)}">{asset.resource.filename}</a></{mode}>
+            </f:else>
+        </f:if>
+    </f:if>
+</f:section>
