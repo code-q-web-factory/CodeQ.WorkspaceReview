@@ -47,10 +47,12 @@
                 </f:if>
                 <f:if condition="{contentChange.type} === 'image'">
                     <div class="codeq-review-media">
-                        <div class="codeq-review-media__item codeq-review-media__item--old">
-                            <f:render section="renderImage" arguments="{image: contentChange.original}" />
-                        </div>
-                        <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                        <f:if condition="{contentChange.original}">
+                            <div class="codeq-review-media__item codeq-review-media__item--old">
+                                <f:render section="renderImage" arguments="{image: contentChange.original}" />
+                            </div>
+                            <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                        </f:if>
                         <div class="codeq-review-media__item codeq-review-media__item--new">
                             <f:render section="renderImage" arguments="{image: contentChange.changed}" />
                         </div>
@@ -58,12 +60,12 @@
                 </f:if>
                 <f:if condition="{contentChange.type} === 'asset'">
                     <div class="codeq-review-media">
-                        <div class="codeq-review-media__item codeq-review-media__item--old">
-                            <f:if condition="{contentChange.original}">
+                        <f:if condition="{contentChange.original}">
+                            <div class="codeq-review-media__item codeq-review-media__item--old">
                                 <f:render section="renderAssetLink" arguments="{asset: contentChange.original, mode: 'del'}" />
-                            </f:if>
-                        </div>
-                        <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                            </div>
+                            <i class="fas fa-long-arrow-alt-right codeq-review-arrow"></i>
+                        </f:if>
                         <div class="codeq-review-media__item codeq-review-media__item--new">
                             <f:if condition="{contentChange.changed}">
                                 <f:render section="renderAssetLink" arguments="{asset: contentChange.changed, mode: 'ins'}" />

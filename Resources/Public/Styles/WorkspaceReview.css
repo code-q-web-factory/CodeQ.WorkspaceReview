@@ -179,6 +179,11 @@
 
 /* media, visibility, notes ------------------------------------------------- */
 
+.codeq-review-property--image,
+.codeq-review-property--asset {
+    align-items: start;
+}
+
 .codeq-review-media {
     display: flex;
     align-items: center;
