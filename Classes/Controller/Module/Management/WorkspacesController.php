@@ -44,6 +44,11 @@ class WorkspacesController extends NeosWorkspacesController
     protected const CONTEXT_WORDS_KEPT = 10;
 
     /**
+     * Inserted/deleted runs longer than this are shortened in the middle.
+     */
+    protected const EDITED_RUN_COLLAPSE_THRESHOLD = 50;
+
+    /**
      * @Flow\Inject
      * @var BackendUserService
      */
@@ -279,14 +284,14 @@ class WorkspacesController extends NeosWorkspacesController
                     $html[] = $this->renderContextWords($words, $i1 === 0, $i2 === count($originalWords));
                     break;
                 case 'delete':
-                    $html[] = '<del>' . $this->escapeWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
+                    $html[] = '<del>' . $this->renderEditedWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
                     break;
                 case 'insert':
-                    $html[] = '<ins>' . $this->escapeWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
+                    $html[] = '<ins>' . $this->renderEditedWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
                     break;
                 case 'replace':
-                    $html[] = '<del>' . $this->escapeWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
-                    $html[] = '<ins>' . $this->escapeWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
+                    $html[] = '<del>' . $this->renderEditedWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
+                    $html[] = '<ins>' . $this->renderEditedWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
                     break;
             }
         }
@@ -321,6 +326,23 @@ class WorkspacesController extends NeosWorkspacesController
     protected function escapeWords(array $words): string
     {
         return htmlspecialchars(implode(' ', $words), ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Renders an inserted or deleted word run. Very long runs (e.g. the full
+     * text of a newly created element) are shortened in the middle, so a
+     * single change cannot dominate the whole review page.
+     */
+    protected function renderEditedWords(array $words): string
+    {
+        $limit = self::EDITED_RUN_COLLAPSE_THRESHOLD;
+        if (count($words) <= $limit) {
+            return $this->escapeWords($words);
+        }
+        $kept = (int)floor($limit / 2);
+        return $this->escapeWords(array_slice($words, 0, $kept))
+            . ' <span class="codeq-review-ellipsis">…</span> '
+            . $this->escapeWords(array_slice($words, -$kept));
     }
 
     /**
@@ -399,7 +421,13 @@ class WorkspacesController extends NeosWorkspacesController
      */
     protected function getPropertyLabel($propertyName, NodeInterface $changedNode)
     {
-        return $this->translateShorthand((string)parent::getPropertyLabel($propertyName, $changedNode));
+        $label = $this->translateShorthand((string)parent::getPropertyLabel($propertyName, $changedNode));
+        if ($label === $propertyName) {
+            // No ui.label configured: humanize the camelCase property name
+            // ("subtitleColor" -> "Subtitle color") instead of showing it raw.
+            $label = ucfirst(strtolower(preg_replace('/(?<!^)[A-Z]/', ' $0', $propertyName)));
+        }
+        return $label;
     }
 
     /**

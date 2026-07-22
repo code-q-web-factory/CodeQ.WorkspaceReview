@@ -1,152 +1,225 @@
-/* Change-card styling for the workspace review module. All rules are scoped
-   to codeq-review- classes so the core module styling stays untouched. */
+/* Change-card styling for the workspace review module (light "Lite" module
+   theme). All rules are scoped to codeq-review- classes; the wrapper resets
+   the core module's td { white-space: nowrap } so text can flow. */
 
-.codeq-review-summary {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #999999;
+.codeq-review-change {
+    white-space: normal;
+    padding: 2px 0 4px;
 }
+
+/* header ------------------------------------------------------------------ */
 
 .codeq-review-change__header {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 4px 0 8px;
+    gap: 10px;
+    padding: 6px 0 10px;
+}
+
+.codeq-review-change__header > i {
+    color: #8c8c8c;
+    font-size: 14px;
 }
 
 .codeq-review-change__label {
-    font-weight: bold;
+    font-size: 14px;
+    font-weight: 600;
+    color: #141414;
+    max-width: 52ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .codeq-review-change__meta {
     margin-left: auto;
     font-size: 12px;
-    color: #999999;
+    color: #8c8c8c;
     white-space: nowrap;
 }
 
+.codeq-review-change__meta i {
+    margin-right: 3px;
+}
+
+.codeq-review-change__dimensions {
+    font-size: 12px;
+    color: #8c8c8c;
+}
+
+/* status badges ----------------------------------------------------------- */
+
 .codeq-review-badge {
-    padding: 1px 8px;
+    padding: 2px 10px;
     border-radius: 10px;
     font-size: 11px;
+    font-weight: 600;
     line-height: 16px;
+    letter-spacing: 0.02em;
     white-space: nowrap;
 }
 
 .codeq-review-badge--created {
-    background: rgba(0, 170, 90, 0.25);
-    color: #8fe0b7;
+    background: #dff2e4;
+    color: #0f5132;
 }
 
 .codeq-review-badge--deleted {
-    background: rgba(255, 70, 70, 0.25);
-    color: #ffa3a3;
+    background: #fbe7e7;
+    color: #96262b;
 }
 
 .codeq-review-badge--moved {
-    background: rgba(240, 160, 30, 0.25);
-    color: #f0c882;
+    background: #fbf0da;
+    color: #7d5410;
 }
 
 .codeq-review-badge--hidden {
-    background: rgba(150, 150, 150, 0.25);
-    color: #bbbbbb;
+    background: #ebebeb;
+    color: #555555;
 }
 
+/* property rows ----------------------------------------------------------- */
+
 .codeq-review-property {
-    display: flex;
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 4px 18px;
     align-items: baseline;
-    gap: 12px;
-    padding: 6px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 7px 0;
+    border-top: 1px solid #ececec;
 }
 
 .codeq-review-property__label {
-    flex: 0 0 160px;
     font-size: 12px;
-    color: #999999;
+    color: #8c8c8c;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 .codeq-review-property__value {
-    flex: 1 1 auto;
     min-width: 0;
+    max-width: 78ch;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #333333;
+    overflow-wrap: anywhere;
 }
+
+/* inline text diff -------------------------------------------------------- */
 
 .codeq-review-text {
-    line-height: 1.6;
+    white-space: normal;
 }
 
-.codeq-review-text ins {
-    background: rgba(0, 170, 90, 0.28);
-    color: #b5ecd1;
+.codeq-review-change .codeq-review-text ins {
+    background: #dff2e4 !important;
+    color: #0f5132 !important;
     text-decoration: none;
-    padding: 0 2px;
-    border-radius: 2px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
 }
 
-.codeq-review-text del {
-    background: rgba(255, 70, 70, 0.24);
-    color: #ffc2c2;
-    padding: 0 2px;
-    border-radius: 2px;
+.codeq-review-change .codeq-review-text del {
+    background: #fbe7e7 !important;
+    color: #96262b !important;
+    text-decoration: line-through !important;
+    text-decoration-color: rgba(150, 38, 43, 0.7) !important;
+    text-decoration-thickness: 1px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
 }
 
 .codeq-review-ellipsis {
-    color: #777777;
-    padding: 0 4px;
+    color: #9a9a9a;
+    padding: 0 5px;
+    letter-spacing: 0.1em;
 }
+
+/* before/after value pills ------------------------------------------------ */
 
 .codeq-review-pill {
     display: inline-block;
-    max-width: 45%;
+    max-width: 34ch;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
-    padding: 1px 10px;
+    padding: 2px 10px;
     border-radius: 10px;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+    background: #ebebeb;
+    color: #555555;
 }
 
 .codeq-review-pill--old {
-    background: rgba(255, 70, 70, 0.18);
-    color: #ffa3a3;
+    background: #fbe7e7;
+    color: #96262b;
     text-decoration: line-through;
+    text-decoration-color: rgba(150, 38, 43, 0.55);
 }
 
 .codeq-review-pill--new {
-    background: rgba(0, 170, 90, 0.2);
-    color: #8fe0b7;
+    background: #dff2e4;
+    color: #0f5132;
+    text-decoration: none;
 }
 
 .codeq-review-arrow {
-    margin: 0 6px;
-    color: #777777;
+    margin: 0 8px;
+    color: #b0b0b0;
+    vertical-align: middle;
 }
+
+/* media, visibility, notes ------------------------------------------------- */
 
 .codeq-review-media {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+}
+
+.codeq-review-media__item {
+    min-width: 0;
 }
 
 .codeq-review-media__item img {
-    max-width: 220px;
+    max-width: 260px;
+    max-height: 170px;
+    width: auto;
     height: auto;
     display: block;
+    border-radius: 3px;
+    border: 1px solid #e2e2e2;
 }
 
 .codeq-review-media__item--old img {
-    opacity: 0.6;
+    opacity: 0.55;
 }
 
 .codeq-review-visibility {
-    color: #f0c882;
+    color: #7d5410;
+}
+
+.codeq-review-visibility i {
+    margin-right: 4px;
 }
 
 .codeq-review-note {
-    color: #999999;
+    color: #8c8c8c;
     font-style: italic;
+}
+
+/* document rows ----------------------------------------------------------- */
+
+.codeq-review-summary {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #b5b5b5;
 }

@@ -3,27 +3,17 @@
 {namespace review=CodeQ\WorkspaceReview\ViewHelpers}
 <div class="codeq-review-change">
     <div class="codeq-review-change__header">
-        <f:if condition="{change.configuration.ui.icon}">
-            <i class="{change.configuration.ui.icon}" title="{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}" data-neos-toggle="tooltip"></i>
-        </f:if>
-        <span class="codeq-review-change__label"><review:cleanLabel value="{change.node.label}" /></span>
+        <span class="codeq-review-change__label" title="{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}" data-neos-toggle="tooltip"><review:cleanLabel value="{change.node.label}" /></span>
         <f:if condition="{change.node.removed}">
             <f:then>
                 <span class="codeq-review-badge codeq-review-badge--deleted">{neos:backend.translate(id: 'workspaces.legend.deleted', source: 'Modules', package: 'Neos.Neos')}</span>
             </f:then>
             <f:else>
-                <f:if condition="{change.isNew}">
-                    <f:then>
-                        <span class="codeq-review-badge codeq-review-badge--created">{neos:backend.translate(id: 'workspaces.legend.created', source: 'Modules', package: 'Neos.Neos')}</span>
-                    </f:then>
-                    <f:else>
-                        <f:if condition="{change.isMoved}">
-                            <span class="codeq-review-badge codeq-review-badge--moved">{neos:backend.translate(id: 'workspaces.legend.moved', source: 'Modules', package: 'Neos.Neos')}</span>
-                        </f:if>
-                        <f:if condition="{change.node.hidden}">
-                            <span class="codeq-review-badge codeq-review-badge--hidden">{neos:backend.translate(id: 'workspaces.legend.hidden', source: 'Modules', package: 'Neos.Neos')}</span>
-                        </f:if>
-                    </f:else>
+                <f:if condition="{change.isMoved}">
+                    <span class="codeq-review-badge codeq-review-badge--moved">{neos:backend.translate(id: 'workspaces.legend.moved', source: 'Modules', package: 'Neos.Neos')}</span>
+                </f:if>
+                <f:if condition="{change.node.hidden}">
+                    <span class="codeq-review-badge codeq-review-badge--hidden">{neos:backend.translate(id: 'workspaces.legend.hidden', source: 'Modules', package: 'Neos.Neos')}</span>
                 </f:if>
             </f:else>
         </f:if>
