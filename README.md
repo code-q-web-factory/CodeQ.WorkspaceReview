@@ -1,9 +1,9 @@
-# WIP - CodeQ.WorkspaceReview
+# Prototype - CodeQ.WorkspaceReview
 
-Human-readable workspace change review ("change cards") for the Neos CMS
-Management > Workspaces module. The package replaces only the controller and
-the change rendering of the existing module — publish/discard behavior, module
-path and permissions stay unchanged.
+Improve the human-readable workspace change review for the Neos CMS.
+The package replaces only the controller and the change rendering of the 
+existing module — publish/discard behavior, module path and permissions 
+stay unchanged.
 
 ## What it improves over the core module
 
@@ -46,6 +46,6 @@ The package lives in `DistributionPackages` and is installed through the
 path repository of the distribution:
 
 ```bash
-composer require codeq/workspace-review:@dev
+composer require codeq/workspace-review
 ./flow flow:cache:flush
 ```
