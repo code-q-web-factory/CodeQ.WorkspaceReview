@@ -4,9 +4,10 @@
 # templates, and provides the shared layout and partials from Neos.Neos.
 # Note: Flow applies only the single highest-weight matching entry, so this
 # entry must carry the complete set of root paths. Paths are searched in
-# order, first match wins.
+# order, first match wins. Matching both the main and parent backend requests
+# keeps later workspace integrations from replacing these complete roots.
 -
-  requestFilter: 'isPackage("CodeQ.WorkspaceReview") && isController("Module\\Management\\Workspaces")'
+  requestFilter: 'mainRequest.isPackage("Neos.Neos") && parentRequest.isPackage("Neos.Neos") && isFormat("html") && isPackage("CodeQ.WorkspaceReview") && isController("Module\\Management\\Workspaces")'
   options:
     templateRootPaths:
       'CodeQ.WorkspaceReview': 'resource://CodeQ.WorkspaceReview/Private/Templates'
