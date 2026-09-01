@@ -163,14 +163,23 @@ class WorkspacesController extends NeosWorkspacesController
         $changeNodePropertiesDefaults = $changedNode->getNodeType()->getDefaultValuesForProperties();
 
         foreach ($changedNode->getProperties() as $propertyName => $changedPropertyValue) {
-            if (
-                ($originalNode === null && empty($changedPropertyValue))
-                || (isset($changeNodePropertiesDefaults[$propertyName]) && $changedPropertyValue === $changeNodePropertiesDefaults[$propertyName])
-            ) {
+            $isDefaultValue = isset($changeNodePropertiesDefaults[$propertyName])
+                && $changedPropertyValue === $changeNodePropertiesDefaults[$propertyName];
+            if ($originalNode === null && (empty($changedPropertyValue) || $isDefaultValue)) {
+                // A new node carries no review information in properties that
+                // are empty or still hold their NodeType default.
+                continue;
+            }
+            if ($changedNode->isRemoved() && $isDefaultValue) {
+                // A deleted node is compared against nothing, so listing every
+                // untouched default would bury what was actually deleted.
                 continue;
             }
             $originalPropertyValue = ($originalNode === null ? null : $originalNode->getProperty($propertyName));
             if ($changedPropertyValue === $originalPropertyValue && !$changedNode->isRemoved()) {
+                // On an existing node a property that still holds its default
+                // may well be a real change back from a non-default value, so
+                // equality with the published value is the only valid skip.
                 continue;
             }
             $change = $this->renderPropertyChange($propertyName, $originalPropertyValue, $changedPropertyValue, $changedNode);
