@@ -61,6 +61,28 @@ class RichTextDiffer
     ];
 
     /**
+     * Elements that end a word. Every other element is inline and may sit
+     * inside a word or between a word and its punctuation, so its boundary
+     * must not separate what stands left and right of it. Public because the
+     * word-level text diff of the review module has to split words the same
+     * way to stay comparable with the findings of this class.
+     *
+     * @var string[]
+     */
+    public const BLOCK_LEVEL_TAG_NAMES = [
+        'br', 'p', 'div', 'li', 'ul', 'ol', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'blockquote', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'section',
+        'article', 'header', 'footer', 'figure', 'figcaption', 'hr', 'pre',
+    ];
+
+    /**
+     * Whitespace of the raw text, including the non-breaking space, at the
+     * edge where a text node meets the markup around it.
+     */
+    protected const LEADING_WHITESPACE_PATTERN = '/^[\x{00A0}\s]/u';
+    protected const TRAILING_WHITESPACE_PATTERN = '/[\x{00A0}\s]$/u';
+
+    /**
      * Link attributes that change how a link behaves and are therefore worth
      * reporting on their own.
      */
@@ -99,7 +121,7 @@ class RichTextDiffer
      * text segments carrying their formatting marks, and links carrying their
      * label and attributes. "text" holds the full normalized plain text.
      *
-     * @return array{segments: array<int, array{text: string, marks: string[]}>, links: array<int, array<string, ?string>>, text: string}
+     * @return array{segments: array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}>, links: array<int, array<string, ?string>>, text: string}
      */
     protected function extract(string $html): array
     {
@@ -107,10 +129,14 @@ class RichTextDiffer
         $links = [];
         $fragment = $this->parseFragment($html);
         if ($fragment !== null) {
-            $this->collect($fragment, [], null, $segments, $links);
+            $boundaryPending = false;
+            $this->collect($fragment, [], null, $segments, $links, $boundaryPending);
         }
 
         $segments = $this->mergeSegments($segments);
+        // The plain text is built from the very words the formatting
+        // comparison aligns, so both stay comparable between the two sides.
+        [$words] = $this->flattenSegments($segments);
 
         return [
             'segments' => $segments,
@@ -120,7 +146,7 @@ class RichTextDiffer
                 $links,
                 static fn(array $link): bool => $link['text'] !== '' && $link['href'] !== ''
             )),
-            'text' => implode(' ', array_column($segments, 'text')),
+            'text' => implode(' ', $words),
         ];
     }
 
@@ -146,25 +172,58 @@ class RichTextDiffer
 
     /**
      * Walks the parsed fragment in document order, carrying the formatting
-     * marks of all ancestors and the innermost surrounding link.
+     * marks of all ancestors and the innermost surrounding link. Every segment
+     * also records whether it is separated from its neighbours, so a word split
+     * by an inline tag can be put back together later.
      *
      * @param string[] $marks
      * @param int|null $linkIndex index in $links the current text belongs to
-     * @param array<int, array{text: string, marks: string[]}> $segments
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $segments
      * @param array<int, array<string, ?string>> $links
+     * @param bool $boundaryPending whether the text still to come starts after a separation
      */
-    protected function collect(\DOMNode $node, array $marks, ?int $linkIndex, array &$segments, array &$links): void
-    {
+    protected function collect(
+        \DOMNode $node,
+        array $marks,
+        ?int $linkIndex,
+        array &$segments,
+        array &$links,
+        bool &$boundaryPending
+    ): void {
         foreach ($node->childNodes as $child) {
             if ($child instanceof \DOMText) {
-                $text = $this->normalizeText((string)$child->nodeValue);
+                $value = (string)$child->nodeValue;
+                $text = $this->normalizeText($value);
                 if ($text === '') {
+                    // Whitespace between two tags carries no words of its own,
+                    // but it does separate the text on both sides of it.
+                    if ($value !== '') {
+                        $this->markBoundary($segments, $boundaryPending);
+                    }
                     continue;
                 }
-                $segments[] = ['text' => $text, 'marks' => $this->normalizeMarks($marks)];
+                $previousSegment = $segments === [] ? null : $segments[array_key_last($segments)];
+                $segment = [
+                    'text' => $text,
+                    'marks' => $this->normalizeMarks($marks),
+                    // Only whitespace of the raw value - or a boundary the
+                    // markup forces - tells a word ending here from one that
+                    // continues outside this text node.
+                    'spaceBefore' => $boundaryPending || preg_match(self::LEADING_WHITESPACE_PATTERN, $value) === 1,
+                    'spaceAfter' => preg_match(self::TRAILING_WHITESPACE_PATTERN, $value) === 1,
+                ];
+                $segments[] = $segment;
+                $boundaryPending = false;
                 if ($linkIndex !== null) {
+                    // A label is assembled by the same rule as the words are:
+                    // markup inside it must not insert a space that the other
+                    // side has no reason to show, or two labels naming the same
+                    // link stop matching and the link change goes unreported.
                     $label = $links[$linkIndex]['text'];
-                    $links[$linkIndex]['text'] = $label === '' ? $text : $label . ' ' . $text;
+                    $continuesLabel = $previousSegment !== null && $this->isContiguous($previousSegment, $segment);
+                    $links[$linkIndex]['text'] = $label === '' || $continuesLabel
+                        ? $label . $text
+                        : $label . ' ' . $text;
                 }
                 continue;
             }
@@ -173,6 +232,10 @@ class RichTextDiffer
             }
 
             $tagName = strtolower($child->tagName);
+            $isBlockLevel = in_array($tagName, self::BLOCK_LEVEL_TAG_NAMES, true);
+            if ($isBlockLevel) {
+                $this->markBoundary($segments, $boundaryPending);
+            }
             $childMarks = $marks;
             if (isset(self::MARK_BY_TAG_NAME[$tagName])) {
                 $childMarks[] = self::MARK_BY_TAG_NAME[$tagName];
@@ -188,8 +251,28 @@ class RichTextDiffer
                 $childLinkIndex = array_key_last($links);
             }
 
-            $this->collect($child, $childMarks, $childLinkIndex, $segments, $links);
+            $this->collect($child, $childMarks, $childLinkIndex, $segments, $links, $boundaryPending);
+
+            if ($isBlockLevel) {
+                $this->markBoundary($segments, $boundaryPending);
+            }
         }
+    }
+
+    /**
+     * Records that the text collected so far and the text still to come belong
+     * to different words, although no whitespace of their own says so - the
+     * case of two blocks written without a line break between them.
+     *
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $segments
+     */
+    protected function markBoundary(array &$segments, bool &$boundaryPending): void
+    {
+        $lastIndex = array_key_last($segments);
+        if ($lastIndex !== null) {
+            $segments[$lastIndex]['spaceAfter'] = true;
+        }
+        $boundaryPending = true;
     }
 
     /**
@@ -203,12 +286,14 @@ class RichTextDiffer
     }
 
     /**
-     * Joins neighbouring text with the same formatting into one segment. Text
-     * is always joined by a single space, so neither a block boundary nor a
-     * <br> can glue the last word of one block to the first of the next.
+     * Joins neighbouring text with the same formatting into one segment. Two
+     * separated segments are joined by a single space, so neither a block
+     * boundary nor a <br> can glue the last word of one block to the first of
+     * the next; contiguous ones are joined without one, so a word split across
+     * inline tags stays a single word.
      *
-     * @param array<int, array{text: string, marks: string[]}> $segments
-     * @return array<int, array{text: string, marks: string[]}>
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $segments
+     * @return array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}>
      */
     protected function mergeSegments(array $segments): array
     {
@@ -216,12 +301,27 @@ class RichTextDiffer
         foreach ($segments as $segment) {
             $lastIndex = array_key_last($merged);
             if ($lastIndex !== null && $merged[$lastIndex]['marks'] === $segment['marks']) {
-                $merged[$lastIndex]['text'] .= ' ' . $segment['text'];
+                $isContiguous = $this->isContiguous($merged[$lastIndex], $segment);
+                $merged[$lastIndex]['text'] .= ($isContiguous ? '' : ' ') . $segment['text'];
+                // The joined segment ends where the segment just added ends.
+                $merged[$lastIndex]['spaceAfter'] = $segment['spaceAfter'];
                 continue;
             }
             $merged[] = $segment;
         }
         return $merged;
+    }
+
+    /**
+     * Whether a segment continues the word of its predecessor, which is the
+     * case when neither side of the join carries whitespace.
+     *
+     * @param array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool} $previous
+     * @param array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool} $segment
+     */
+    protected function isContiguous(array $previous, array $segment): bool
+    {
+        return !$previous['spaceAfter'] && !$segment['spaceBefore'];
     }
 
     /**
@@ -414,8 +514,8 @@ class RichTextDiffer
      * Aligns both texts word by word and reports words that survived the edit
      * but are formatted differently now.
      *
-     * @param array<int, array{text: string, marks: string[]}> $originalSegments
-     * @param array<int, array{text: string, marks: string[]}> $changedSegments
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $originalSegments
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $changedSegments
      * @return array<int, array<string, mixed>>
      */
     protected function compareFormatting(array $originalSegments, array $changedSegments): array
@@ -463,21 +563,34 @@ class RichTextDiffer
      * Splits the segments into one entry per word plus the marks that word
      * carries, so both sides can be aligned word by word.
      *
-     * @param array<int, array{text: string, marks: string[]}> $segments
+     * A contiguous segment continues the last word instead of starting a new
+     * one, and that word keeps the marks of the segment it started in: the
+     * comma behind a bolded "Uhr" belongs to the word "Uhr," and is therefore
+     * reported as part of the passage that became bold.
+     *
+     * @param array<int, array{text: string, marks: string[], spaceBefore: bool, spaceAfter: bool}> $segments
      * @return array{0: string[], 1: array<int, string[]>}
      */
     protected function flattenSegments(array $segments): array
     {
         $words = [];
         $marks = [];
+        $previous = null;
         foreach ($segments as $segment) {
+            $continuesWord = $words !== [] && $previous !== null && $this->isContiguous($previous, $segment);
             foreach (explode(' ', $segment['text']) as $word) {
                 if ($word === '') {
+                    continue;
+                }
+                if ($continuesWord) {
+                    $words[array_key_last($words)] .= $word;
+                    $continuesWord = false;
                     continue;
                 }
                 $words[] = $word;
                 $marks[] = $segment['marks'];
             }
+            $previous = $segment;
         }
         return [$words, $marks];
     }

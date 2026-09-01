@@ -849,12 +849,20 @@ class WorkspacesController extends NeosWorkspacesController
      * Normalizes a rich-text or plain value into a list of comparable words:
      * markup is stripped and entities are decoded, so "&amp;" diffs as "&".
      *
+     * Only a block-level element ends a word and is therefore replaced by a
+     * space. An inline element may sit inside a word or between a word and its
+     * punctuation, so it is dropped without leaving a space behind - bolding
+     * "18 Uhr" in front of a comma must not turn "Uhr," into "Uhr ,".
+     *
      * @return string[]
      */
     protected function tokenizeText(string $value): array
     {
-        $text = preg_replace('/<br[^>]*>/i', ' ', $value);
-        $text = preg_replace('/<[^>]*>/', ' ', $text);
+        $blockLevelTagNames = implode('|', RichTextDiffer::BLOCK_LEVEL_TAG_NAMES);
+        // The lookahead keeps the tag name whole, so "<pre>" is not read as a
+        // "<p>" and "<header>" not as an "<hr>".
+        $text = preg_replace('#</?(?:' . $blockLevelTagNames . ')(?=[\s/>])[^>]*>#i', ' ', $value);
+        $text = preg_replace('/<[^>]*>/', '', $text);
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $text = preg_replace('/[\x{00A0}\s]+/u', ' ', $text);
         $text = trim($text);

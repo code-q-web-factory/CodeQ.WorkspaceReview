@@ -124,6 +124,40 @@ class RichTextDifferTest extends UnitTestCase
                     ],
                 ],
             ],
+            'a label whose word is split by inline markup still names its link' => [
+                '<a href="http://neos.eu"><strong>Neos</strong>CMS</a>',
+                '<a href="https://neos.eu">NeosCMS</a>',
+                [
+                    // The tag inside the label must not make it read
+                    // "Neos CMS", or the two labels no longer pair up and the
+                    // changed target is reported nowhere at all.
+                    [
+                        'kind' => 'linkTarget',
+                        'linkText' => 'NeosCMS',
+                        'original' => 'http://neos.eu',
+                        'changed' => 'https://neos.eu',
+                    ],
+                    // The same edit really did drop the bold from the word.
+                    [
+                        'kind' => 'formatting',
+                        'text' => 'NeosCMS',
+                        'originalMarks' => ['bold'],
+                        'changedMarks' => [],
+                    ],
+                ],
+            ],
+            'a real space inside a label survives' => [
+                '<p>Bitte <a href="http://neos.eu">Mehr <strong>erfahren</strong></a></p>',
+                '<p>Bitte <a href="https://neos.eu">Mehr <strong>erfahren</strong></a></p>',
+                [
+                    [
+                        'kind' => 'linkTarget',
+                        'linkText' => 'Mehr erfahren',
+                        'original' => 'http://neos.eu',
+                        'changed' => 'https://neos.eu',
+                    ],
+                ],
+            ],
             'single word became bold' => [
                 '<p>Hallo schöne Welt</p>',
                 '<p>Hallo <strong>schöne</strong> Welt</p>',
@@ -163,6 +197,68 @@ class RichTextDifferTest extends UnitTestCase
                         'text' => 'ein',
                         'originalMarks' => [],
                         'changedMarks' => ['underline'],
+                    ],
+                ],
+            ],
+            'a word bolded in front of a comma keeps the comma' => [
+                '<p>Der Einlass beginnt jeweils um 18 Uhr, der Eintritt ist frei.</p>',
+                '<p>Der Einlass beginnt jeweils um <strong>18 Uhr</strong>, der Eintritt ist frei.</p>',
+                [
+                    // The comma follows the closing tag without a space, so it
+                    // belongs to the bolded word instead of standing alone.
+                    [
+                        'kind' => 'formatting',
+                        'text' => '18 Uhr,',
+                        'originalMarks' => [],
+                        'changedMarks' => ['bold'],
+                    ],
+                ],
+            ],
+            'a space behind the bolded words still ends the passage' => [
+                '<p>Der Einlass beginnt um 18 Uhr heute</p>',
+                '<p>Der Einlass beginnt um <strong>18 Uhr</strong> heute</p>',
+                [
+                    [
+                        'kind' => 'formatting',
+                        'text' => '18 Uhr',
+                        'originalMarks' => [],
+                        'changedMarks' => ['bold'],
+                    ],
+                ],
+            ],
+            'a word split across inline tags stays one word' => [
+                '<p>Mehr auf der <strong>Pro</strong>grammseite</p>',
+                '<p>Mehr auf der Programmseite</p>',
+                [
+                    [
+                        'kind' => 'formatting',
+                        'text' => 'Programmseite',
+                        'originalMarks' => ['bold'],
+                        'changedMarks' => [],
+                    ],
+                ],
+            ],
+            'two blocks written without whitespace stay two words' => [
+                '<p>eins</p><p>zwei</p>',
+                '<p><strong>eins</strong></p><p>zwei</p>',
+                [
+                    [
+                        'kind' => 'formatting',
+                        'text' => 'eins',
+                        'originalMarks' => [],
+                        'changedMarks' => ['bold'],
+                    ],
+                ],
+            ],
+            'a line break separates the words it stands between' => [
+                '<p>eins<br>zwei</p>',
+                '<p><strong>eins</strong><br>zwei</p>',
+                [
+                    [
+                        'kind' => 'formatting',
+                        'text' => 'eins',
+                        'originalMarks' => [],
+                        'changedMarks' => ['bold'],
                     ],
                 ],
             ],

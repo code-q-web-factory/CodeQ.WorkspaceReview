@@ -435,6 +435,34 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /** @test */
+    public function renderContentChangesReportsOnlyTheFormattingWhenAWordBeforeACommaBecameBold(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, [
+            'text' => '<p>Der Einlass beginnt jeweils um 18 Uhr, der Eintritt ist frei.</p>',
+        ]);
+        $changedNode = $this->createNode($nodeType, [
+            'text' => '<p>Der Einlass beginnt jeweils um <strong>18 Uhr</strong>, der Eintritt ist frei.</p>',
+        ]);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // Removing the inline tag must not leave a space behind, which would
+        // let the word diff claim "Uhr," was rewritten as "Uhr ,".
+        self::assertSame(['text'], array_keys($changes));
+        self::assertSame(
+            [
+                'type' => 'formatting',
+                'propertyLabel' => 'Text',
+                'detail' => 'formatting.detail(18 Uhr,)',
+                'original' => 'value.formatNone',
+                'changed' => 'format.bold',
+            ],
+            $changes['text']
+        );
+    }
+
+    /** @test */
     public function renderContentChangesShowsTheTextOfARemovedNodeAsDeleted(): void
     {
         $nodeType = $this->createNodeType('Vendor.Site:Text');
