@@ -16,6 +16,8 @@ use Neos\Diff\SequenceMatcher;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\EelHelper\TranslationHelper;
 use Neos\Flow\I18n\Locale;
+use Neos\Flow\Mvc\View\ViewInterface;
+use Neos\FluidAdaptor\View\AbstractTemplateView;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\ImageInterface;
 use Neos\Media\Domain\Repository\AssetRepository;
@@ -89,6 +91,74 @@ class WorkspacesController extends NeosWorkspacesController
      * @var AssetRepository
      */
     protected $assetRepository;
+
+    /**
+     * Points the view at this package's templates and at the Neos layouts.
+     *
+     * Which Views.yaml entry applies is decided by Flow's request filter
+     * weights, and only the single heaviest match is used - its options are
+     * not merged with the others. Another package overriding the same module
+     * (Flownative.WorkspacePreview does so for the index action) can therefore
+     * replace the paths configured here. Its configuration carries no layout
+     * root, which is harmless while Neos.Neos owns the controller but not once
+     * this package does: Fluid then derives the layout path from this package
+     * and fails, because it ships no layouts of its own.
+     *
+     * Setting the paths on the view sidesteps that contest. They are added to
+     * whatever the winning configuration provided rather than replacing it, so
+     * a template another package contributes for an action this package does
+     * not override stays reachable. This package's own templates do take
+     * precedence on every action, which no view configuration can undo.
+     *
+     * The guard ends where root paths do: a configuration that replaces
+     * "templatePathAndFilenamePattern" or "layoutPathAndFilenamePattern" with a
+     * pattern carrying no root placeholder bypasses these lists entirely.
+     *
+     * @param ViewInterface $view
+     * @return void
+     */
+    protected function initializeView(ViewInterface $view)
+    {
+        parent::initializeView($view);
+
+        if (!$view instanceof AbstractTemplateView) {
+            return;
+        }
+
+        $templatePaths = $view->getTemplatePaths();
+        $templatePaths->setTemplateRootPaths(
+            $this->completeRootPaths($templatePaths->getTemplateRootPaths(), 'Templates')
+        );
+        $templatePaths->setPartialRootPaths(
+            $this->completeRootPaths($templatePaths->getPartialRootPaths(), 'Partials')
+        );
+        // No own path for layouts: this package ships none, and Fluid already
+        // derives one from it - that derived path is exactly what fails, so
+        // only the Neos fallback behind it is worth adding.
+        $templatePaths->setLayoutRootPaths(
+            $this->completeRootPaths($templatePaths->getLayoutRootPaths(), 'Layouts', false)
+        );
+    }
+
+    /**
+     * Puts this package's resource path first, so its own templates win, and
+     * appends the Neos path unless it is configured already. Configured paths
+     * keep their order, including a Neos path that some configuration
+     * deliberately placed ahead of another package's.
+     *
+     * @param string[] $configuredPaths
+     * @return string[]
+     */
+    protected function completeRootPaths(array $configuredPaths, string $type, bool $includeOwnPath = true): array
+    {
+        $paths = array_values($configuredPaths);
+        if ($includeOwnPath) {
+            array_unshift($paths, 'resource://CodeQ.WorkspaceReview/Private/' . $type);
+        }
+        $paths[] = 'resource://Neos.Neos/Private/' . $type;
+
+        return array_values(array_unique($paths));
+    }
 
     /**
      * Adds a human-readable per-document change summary on top of the site

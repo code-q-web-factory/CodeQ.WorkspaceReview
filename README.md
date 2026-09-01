@@ -97,7 +97,7 @@ These distinctions help reviewers decide whether they need to open the preview o
 - The controller extends the Neos core controller and replaces only the diff pipeline.
 - `Classes/Diff/RichTextDiffer.php` parses markup with `\DOMDocument`, pairs links by identity and label, and compares formatting word by word.
 - The rich-text differ has no injected dependencies or content-repository knowledge. The controller resolves labels, references and translations.
-- `Configuration/Views.yaml` provides Neos template, partial and layout fallbacks, so untouched Index, New and Edit actions keep using the core views.
+- The controller points the view at this package's templates and at the Neos layouts in `initializeView()`. Flow applies only the single heaviest-matching `Views.yaml` entry rather than merging them, so another package overriding the same module could otherwise leave the module without a layout root.
 - `Configuration/Policy.yaml` grants the inherited controller actions after the controller replacement. Without it, the module's method-based privilege matching would return 403.
 - Only `Show.html`, `ContentChangeDiff.html` and `DocumentBreadcrumb.html` override core templates.
 
