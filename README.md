@@ -27,8 +27,8 @@ stay unchanged.
 - **No invisible changes**: every changed node shows a reason. Visibility
   changes appear as an explicit entry, a property changed back to its NodeType
   default is reported instead of silently dropped, and nodes without any
-  renderable property change get a "no visible changes" note instead of an
-  empty row.
+  renderable property change get a note - either "no visible changes" or, when
+  the node was edited and reverted, that it matches the published version again.
 - **Correct entity handling**: HTML entities are decoded before diffing and
   in labels, so titles show "&" instead of "&amp;".
 - **Per-page summary**: each document row shows a summary like

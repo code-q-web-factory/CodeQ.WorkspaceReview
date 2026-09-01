@@ -34,6 +34,14 @@
                 <source>No visible changes (internal update)</source>
                 <target>Keine sichtbaren Änderungen (interne Aktualisierung)</target>
             </trans-unit>
+            <trans-unit id="change.technicalOnly" xml:space="preserve">
+                <source>Changed – the wording is unchanged, please check details in the preview.</source>
+                <target>Geändert – der Wortlaut ist unverändert, Details bitte in der Vorschau prüfen.</target>
+            </trans-unit>
+            <trans-unit id="change.identicalToOriginal" xml:space="preserve">
+                <source>Edited, but matching the published version again – no content differences found.</source>
+                <target>Bearbeitet, aber wieder auf dem Stand der veröffentlichten Version – keine inhaltlichen Unterschiede gefunden.</target>
+            </trans-unit>
             <trans-unit id="system.hiddenBefore" xml:space="preserve">
                 <source>Hide before</source>
                 <target>Verstecken bis</target>
@@ -226,6 +234,16 @@
                 <trans-unit id="summary.formatting[1]" xml:space="preserve">
                     <source>{0} formatting changes</source>
                     <target>{0} Formatierungsänderungen</target>
+                </trans-unit>
+            </group>
+            <group id="summary.internal" restype="x-gettext-plurals">
+                <trans-unit id="summary.internal[0]" xml:space="preserve">
+                    <source>{0} internal update</source>
+                    <target>{0} interne Aktualisierung</target>
+                </trans-unit>
+                <trans-unit id="summary.internal[1]" xml:space="preserve">
+                    <source>{0} internal updates</source>
+                    <target>{0} interne Aktualisierungen</target>
                 </trans-unit>
             </group>
         </body>

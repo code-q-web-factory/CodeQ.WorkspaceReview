@@ -126,6 +126,7 @@ class WorkspacesController extends NeosWorkspacesController
             'visibility' => 0,
             'links' => 0,
             'formatting' => 0,
+            'internal' => 0,
         ];
         foreach ($document['changes'] ?? [] as $change) {
             /** @var NodeInterface $node */
@@ -172,6 +173,9 @@ class WorkspacesController extends NeosWorkspacesController
                     case 'formatting':
                         $counts['formatting']++;
                         break;
+                    case 'note':
+                        $counts['internal']++;
+                        break;
                 }
             }
         }
@@ -186,6 +190,7 @@ class WorkspacesController extends NeosWorkspacesController
             'visibility' => 'summary.visibility',
             'links' => 'summary.links',
             'formatting' => 'summary.formatting',
+            'internal' => 'summary.internal',
         ];
         $parts = [];
         foreach ($labelIds as $countKey => $labelId) {
@@ -207,6 +212,7 @@ class WorkspacesController extends NeosWorkspacesController
         $contentChanges = [];
         $originalNode = $this->getOriginalNode($changedNode);
         $changeNodePropertiesDefaults = $changedNode->getNodeType()->getDefaultValuesForProperties();
+        $hasScalarDifference = false;
 
         foreach ($changedNode->getProperties() as $propertyName => $changedPropertyValue) {
             $isDefaultValue = isset($changeNodePropertiesDefaults[$propertyName])
@@ -228,10 +234,15 @@ class WorkspacesController extends NeosWorkspacesController
                 // equality with the published value is the only valid skip.
                 continue;
             }
+            if (!$this->valueCarriesObjectIdentity($originalPropertyValue) && !$this->valueCarriesObjectIdentity($changedPropertyValue)) {
+                // Only a difference between values that compare by value proves
+                // the stored content really changed.
+                $hasScalarDifference = true;
+            }
             foreach ($this->renderPropertyChange($propertyName, $originalPropertyValue, $changedPropertyValue, $changedNode) as $index => $entry) {
                 // One property can yield several entries (a text diff plus the
                 // rich-text findings), so each of them needs its own key.
-                $suffix = $index === 0 ? '' : '#rt' . $index;
+                $suffix = $entry['type'] === 'note' ? '#note' : ($index === 0 ? '' : '#rt' . $index);
                 if ($index > 0) {
                     // All entries describe the same field; repeating its name
                     // would read as several changed fields instead of one.
@@ -256,18 +267,41 @@ class WorkspacesController extends NeosWorkspacesController
 
         // Guarantee an explanation: a node that is neither removed, new nor
         // moved but has no renderable property change would otherwise appear
-        // in the list without any stated reason.
+        // in the list without any stated reason. Without a scalar difference
+        // the node was edited and reverted, which is worth saying out loud.
         $isNew = $originalNode === null;
         $isMoved = $originalNode !== null && $originalNode->getPath() !== $changedNode->getPath();
         if ($contentChanges === [] && !$changedNode->isRemoved() && !$isNew && !$isMoved) {
             $contentChanges['_note'] = [
                 'type' => 'note',
                 'propertyLabel' => '',
-                'message' => $this->translateOwn('change.noVisibleChanges'),
+                'message' => $this->translateOwn($hasScalarDifference ? 'change.noVisibleChanges' : 'change.identicalToOriginal'),
             ];
         }
 
         return $contentChanges;
+    }
+
+    /**
+     * Tells whether a value compares by identity rather than by content.
+     * Objects are re-instantiated per request and therefore differ even when
+     * they mean the same; reference properties hand out arrays of such objects,
+     * so an array counts as soon as it holds one.
+     */
+    protected function valueCarriesObjectIdentity($value): bool
+    {
+        if (is_object($value)) {
+            return true;
+        }
+        if (!is_array($value)) {
+            return false;
+        }
+        foreach ($value as $entry) {
+            if (is_object($entry)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -490,8 +524,8 @@ class WorkspacesController extends NeosWorkspacesController
         if ($originalValue instanceof \DateTimeInterface || $changedValue instanceof \DateTimeInterface) {
             $bothDates = $originalValue instanceof \DateTimeInterface && $changedValue instanceof \DateTimeInterface;
             if ($bothDates && $originalValue->getTimestamp() === $changedValue->getTimestamp() && !$isRemoved) {
-                // The two values describe the same moment, so there is
-                // nothing to report.
+                // Two instances of the same moment: the stored value is
+                // unchanged, only the object identity differs.
                 return [];
             }
             return [[
@@ -510,6 +544,13 @@ class WorkspacesController extends NeosWorkspacesController
             $originalLabel = $this->renderValueLabel($originalValue, $propertyName, $changedNode);
             $changedLabel = $isRemoved ? $this->translateOwn('value.empty') : $this->renderValueLabel($changedValue, $propertyName, $changedNode);
             if ($originalLabel === $changedLabel) {
+                if ((is_scalar($originalValue) || $originalValue === null) && (is_scalar($changedValue) || $changedValue === null)) {
+                    // Scalars compare by value, so equal labels over different
+                    // values mean a real but invisible change.
+                    return $this->renderTechnicalOnlyNote($propertyLabel, $originalValue, $changedValue, $isRemoved);
+                }
+                // Objects and arrays are rebuilt per request and differ by
+                // identity, so an entry here would be a false positive.
                 return [];
             }
             return [[
@@ -536,7 +577,38 @@ class WorkspacesController extends NeosWorkspacesController
                 $entries[] = $this->renderRichTextFinding($finding, $propertyLabel, $changedNode);
             }
         }
+        if ($entries === []) {
+            return $this->renderTechnicalOnlyNote($propertyLabel, $originalValue, $changedValue, $isRemoved);
+        }
         return $entries;
+    }
+
+    /**
+     * Names the field of a change that is real on the stored value but has no
+     * visible effect, instead of dropping it and leaving the reviewer with an
+     * unexplained card.
+     *
+     * The note claims that a published version exists and reads differently, so
+     * it stays silent without a published counterpart - a removed node is
+     * compared against nothing, a new node has nothing to be compared to - and
+     * whenever both sides read the same once null and "" are treated as the
+     * same emptiness.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function renderTechnicalOnlyNote(string $propertyLabel, $originalValue, $changedValue, bool $isRemoved): array
+    {
+        if ($isRemoved || $originalValue === null) {
+            return [];
+        }
+        if ((string)$originalValue === (string)($changedValue ?? '')) {
+            return [];
+        }
+        return [[
+            'type' => 'note',
+            'propertyLabel' => $propertyLabel,
+            'message' => $this->translateOwn('change.technicalOnly'),
+        ]];
     }
 
     /**

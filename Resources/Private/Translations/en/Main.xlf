@@ -26,6 +26,12 @@
             <trans-unit id="change.noVisibleChanges" xml:space="preserve">
                 <source>No visible changes (internal update)</source>
             </trans-unit>
+            <trans-unit id="change.technicalOnly" xml:space="preserve">
+                <source>Changed – the wording is unchanged, please check details in the preview.</source>
+            </trans-unit>
+            <trans-unit id="change.identicalToOriginal" xml:space="preserve">
+                <source>Edited, but matching the published version again – no content differences found.</source>
+            </trans-unit>
             <trans-unit id="system.hiddenBefore" xml:space="preserve">
                 <source>Hide before</source>
             </trans-unit>
@@ -174,6 +180,14 @@
                 </trans-unit>
                 <trans-unit id="summary.formatting[1]" xml:space="preserve">
                     <source>{0} formatting changes</source>
+                </trans-unit>
+            </group>
+            <group id="summary.internal" restype="x-gettext-plurals">
+                <trans-unit id="summary.internal[0]" xml:space="preserve">
+                    <source>{0} internal update</source>
+                </trans-unit>
+                <trans-unit id="summary.internal[1]" xml:space="preserve">
+                    <source>{0} internal updates</source>
                 </trans-unit>
             </group>
         </body>

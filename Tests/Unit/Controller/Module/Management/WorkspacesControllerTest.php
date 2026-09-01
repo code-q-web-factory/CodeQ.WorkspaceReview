@@ -249,6 +249,70 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /** @test */
+    public function renderContentChangesNamesTheFieldOfAnInvisibleTextChange(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Hallo</p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p >Hallo</p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'note',
+                'propertyLabel' => 'Text',
+                'message' => 'change.technicalOnly',
+            ],
+            $changes['text#note'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesStatesThatAnEditedNodeMatchesTheOriginalAgain(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $properties = ['text' => '<p>Hallo Welt</p>'];
+        $originalNode = $this->createNode($nodeType, $properties);
+        $changedNode = $this->createNode($nodeType, $properties);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                '_note' => [
+                    'type' => 'note',
+                    'propertyLabel' => '',
+                    'message' => 'change.identicalToOriginal',
+                ],
+            ],
+            $changes
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesTreatsARebuiltDateTimeAsNoChangeAtAll(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['publishDate' => new \DateTimeImmutable('2026-09-01 08:00:00')]);
+        $changedNode = $this->createNode($nodeType, ['publishDate' => new \DateTimeImmutable('2026-09-01 08:00:00')]);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // The two instances differ by identity only, which is no reason to
+        // claim the node was changed and reverted.
+        self::assertSame(
+            [
+                '_note' => [
+                    'type' => 'note',
+                    'propertyLabel' => '',
+                    'message' => 'change.identicalToOriginal',
+                ],
+            ],
+            $changes
+        );
+    }
+
+    /** @test */
     public function renderContentChangesShowsAMovedNodeAsAPositionAmongItsSiblings(): void
     {
         $nodeType = $this->createNodeType('Vendor.Site:Text');
@@ -371,6 +435,33 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /** @test */
+    public function renderContentChangesShowsTheTextOfARemovedNodeAsDeleted(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Wird gelöscht</p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Wird gelöscht</p>'], isRemoved: true);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(['text'], array_keys($changes));
+        self::assertSame('text', $changes['text']['type']);
+        self::assertStringContainsString('<del>Wird gelöscht</del>', $changes['text']['diffHtml']);
+    }
+
+    /** @test */
+    public function renderContentChangesSaysNothingTechnicalAboutANodeCreatedAndDeletedAtOnce(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Wird gelöscht</p>'], isRemoved: true);
+
+        $changes = $this->createController(null)->renderContentChangesForTest($changedNode);
+
+        // There is no published version this content could differ from; the
+        // "deleted" badge is the whole story.
+        self::assertSame([], $changes);
+    }
+
+    /** @test */
     public function renderContentChangesSkipsUntouchedDefaultsOfARemovedNode(): void
     {
         $nodeType = $this->createNodeType('Vendor.Site:Element', [], ['spaceBelow' => 'normal']);
@@ -380,6 +471,54 @@ class WorkspacesControllerTest extends UnitTestCase
         $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
 
         self::assertSame([], $changes);
+    }
+
+    /** @test */
+    public function renderContentChangesSaysNothingAboutAValueThatWasNeverSet(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['title' => null, 'text' => '<p>Hallo</p>']);
+        $changedNode = $this->createNode($nodeType, ['title' => '', 'text' => '<p>Hallo Welt</p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // "not set" and "empty" describe the same state, so the empty title is
+        // no change a reviewer needs to read about.
+        self::assertSame(['text'], array_keys($changes));
+    }
+
+    /** @test */
+    public function renderContentChangesSaysNothingTechnicalAboutAnEmptyParagraphOfANewNode(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>&nbsp;</p>']);
+
+        $changes = $this->createController(null)->renderContentChangesForTest($changedNode);
+
+        self::assertSame([], $changes);
+    }
+
+    /** @test */
+    public function renderContentChangesCallsARevertedReferenceListIdenticalToTheOriginal(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Element');
+        $originalNode = $this->createNode($nodeType, ['related' => [$this->createLabelledNode('Kontakt')]]);
+        $changedNode = $this->createNode($nodeType, ['related' => [$this->createLabelledNode('Kontakt')]]);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // The two arrays hold different instances of the same reference, which
+        // is object identity, not a stored difference.
+        self::assertSame(
+            [
+                '_note' => [
+                    'type' => 'note',
+                    'propertyLabel' => '',
+                    'message' => 'change.identicalToOriginal',
+                ],
+            ],
+            $changes
+        );
     }
 
     /** @test */
@@ -446,6 +585,35 @@ class WorkspacesControllerTest extends UnitTestCase
         );
     }
 
+    /** @test */
+    public function renderDocumentSummaryCountsEveryKindOfContentChange(): void
+    {
+        $node = $this->createMock(NodeInterface::class);
+        $node->method('isRemoved')->willReturn(false);
+        $document = [
+            'changes' => [
+                [
+                    'node' => $node,
+                    'contentChanges' => [
+                        ['type' => 'text'],
+                        ['type' => 'value'],
+                        ['type' => 'link'],
+                        ['type' => 'formatting'],
+                        ['type' => 'note'],
+                        '_index' => ['type' => 'value'],
+                    ],
+                ],
+            ],
+        ];
+
+        $summary = $this->createController(null)->renderDocumentSummaryForTest($document);
+
+        self::assertSame(
+            'summary.movedElements(1) · summary.texts(1) · summary.settings(1) · summary.links(1) · summary.formatting(1) · summary.internal(1)',
+            $summary
+        );
+    }
+
     /**
      * The controller is exercised through an anonymous subclass, because a
      * unit test has neither Flow's dependency injection nor a base workspace
@@ -465,6 +633,11 @@ class WorkspacesControllerTest extends UnitTestCase
             public function renderContentChangesForTest(NodeInterface $changedNode): array
             {
                 return $this->renderContentChanges($changedNode);
+            }
+
+            public function renderDocumentSummaryForTest(array $document): string
+            {
+                return $this->renderDocumentSummary($document);
             }
 
             protected function getOriginalNode(NodeInterface $modifiedNode): ?NodeInterface
