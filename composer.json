@@ -5,7 +5,8 @@
     "license": "GPL-3.0-or-later",
     "require": {
         "neos/neos": "^8.0",
-        "neos/diff": "*"
+        "neos/diff": "*",
+        "ext-dom": "*"
     },
     "autoload": {
         "psr-4": {
