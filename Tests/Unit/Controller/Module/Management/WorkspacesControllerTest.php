@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace CodeQ\WorkspaceReview\Tests\Unit\Controller\Module\Management;
 
 use CodeQ\WorkspaceReview\Controller\Module\Management\WorkspacesController;
+use CodeQ\WorkspaceReview\Diff\RichTextDiffer;
 use Neos\ContentRepository\Domain\Model\ArrayPropertyCollection;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\ContentRepository\Domain\Model\NodeType;
+use Neos\ContentRepository\Domain\Service\Context;
 use Neos\Flow\Tests\UnitTestCase;
 
 class WorkspacesControllerTest extends UnitTestCase
@@ -120,6 +122,133 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /** @test */
+    public function renderContentChangesReportsALinkTargetTheTextDiffCannotSee(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="http://neos.eu">neos.eu</a></p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="https://neos.eu">neos.eu</a></p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'link',
+                'propertyLabel' => 'Text',
+                'detail' => 'link.detail(neos.eu)',
+                'original' => 'http://neos.eu',
+                'changed' => 'https://neos.eu',
+            ],
+            $changes['text'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesKeepsTheTextDiffNextToItsRichTextFindings(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="http://neos.eu">neos.eu</a> lesen</p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="https://neos.eu">neos.eu</a> nachlesen</p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(['text', 'text#rt1'], array_keys($changes));
+        self::assertSame('text', $changes['text']['type']);
+        self::assertSame('link', $changes['text#rt1']['type']);
+        // Both entries describe the same field, so its name is stated once.
+        self::assertSame('Text', $changes['text']['propertyLabel']);
+        self::assertSame('', $changes['text#rt1']['propertyLabel']);
+    }
+
+    /** @test */
+    public function renderContentChangesNamesWhereALinkOpensInsteadOfTheRawKeyword(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="https://neos.eu">neos.eu</a></p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Mehr auf <a href="https://neos.eu" target="_blank">neos.eu</a></p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'link',
+                'propertyLabel' => 'Text',
+                'detail' => 'link.detailAttribute(neos.eu, link.attribute.target)',
+                'original' => 'link.target.sameTab',
+                'changed' => 'link.target.newTab',
+            ],
+            $changes['text'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesResolvesAnInternalLinkTargetToThePageTitle(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $context = $this->createMock(Context::class);
+        $context->method('getNodeByIdentifier')->willReturnCallback(
+            fn($identifier) => $identifier === 'c0ffee' ? $this->createLabelledNode('Kontakt &amp; Anfahrt') : null
+        );
+        $originalNode = $this->createNode($nodeType, ['text' => '<p><a href="node://deadbeef">Mehr</a></p>']);
+        $changedNode = $this->createNode(
+            $nodeType,
+            ['text' => '<p><a href="node://c0ffee">Mehr</a></p>'],
+            context: $context
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'link',
+                'propertyLabel' => 'Text',
+                'detail' => 'link.detail(Mehr)',
+                // A target the context cannot resolve keeps its raw href.
+                'original' => 'node://deadbeef',
+                'changed' => 'Kontakt & Anfahrt',
+            ],
+            $changes['text'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesShowsTheRawTargetsOfTwoPagesWithTheSameTitle(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $context = $this->createMock(Context::class);
+        $context->method('getNodeByIdentifier')->willReturnCallback(
+            fn($identifier) => $this->createLabelledNode('Kontakt')
+        );
+        $originalNode = $this->createNode($nodeType, ['text' => '<p><a href="node://deadbeef">Mehr</a></p>']);
+        $changedNode = $this->createNode(
+            $nodeType,
+            ['text' => '<p><a href="node://c0ffee">Mehr</a></p>'],
+            context: $context
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // Two equal labels would read as "Kontakt → Kontakt" and hide that the
+        // link points at a different page now.
+        self::assertSame('node://deadbeef', $changes['text']['original'] ?? null);
+        self::assertSame('node://c0ffee', $changes['text']['changed'] ?? null);
+    }
+
+    /** @test */
+    public function renderContentChangesKeepsALinkTargetItCannotResolve(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p><a href="asset://deadbeef">Prospekt</a></p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p><a href="asset://c0ffee">Prospekt</a></p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // Without an asset repository the lookup fails; the review page must
+        // still render, showing the raw targets.
+        self::assertSame('asset://deadbeef', $changes['text']['original'] ?? null);
+        self::assertSame('asset://c0ffee', $changes['text']['changed'] ?? null);
+    }
+
+    /** @test */
     public function renderContentChangesShowsAMovedNodeAsAPositionAmongItsSiblings(): void
     {
         $nodeType = $this->createNodeType('Vendor.Site:Text');
@@ -202,6 +331,43 @@ class WorkspacesControllerTest extends UnitTestCase
         // An ordinal within another list would suggest a reordering that never
         // happened; the changed path already states the move.
         self::assertSame(['_path'], array_keys($changes));
+    }
+
+    /** @test */
+    public function renderContentChangesNamesTheFormattingOfAReformattedPassage(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, [
+            'text' => '<p>Hallo schöne Welt</p>',
+            'heading' => '<p>Titel</p>',
+        ]);
+        $changedNode = $this->createNode($nodeType, [
+            'text' => '<p>Hallo <strong>schöne</strong> Welt</p>',
+            'heading' => '<h2>Titel</h2>',
+        ]);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'formatting',
+                'propertyLabel' => 'Text',
+                'detail' => 'formatting.detail(schöne)',
+                'original' => 'value.formatNone',
+                'changed' => 'format.bold',
+            ],
+            $changes['text'] ?? null
+        );
+        self::assertSame(
+            [
+                'type' => 'formatting',
+                'propertyLabel' => 'Heading',
+                'detail' => 'formatting.detail(Titel)',
+                'original' => 'value.formatNone',
+                'changed' => 'format.heading(2)',
+            ],
+            $changes['heading'] ?? null
+        );
     }
 
     /** @test */
@@ -293,6 +459,7 @@ class WorkspacesControllerTest extends UnitTestCase
             public function __construct(?NodeInterface $originalNode)
             {
                 $this->originalNode = $originalNode;
+                $this->richTextDiffer = new RichTextDiffer();
             }
 
             public function renderContentChangesForTest(NodeInterface $changedNode): array
@@ -342,7 +509,8 @@ class WorkspacesControllerTest extends UnitTestCase
         int $index = 1,
         ?NodeInterface $parent = null,
         string $path = '/sites/example/moved',
-        bool $isRemoved = false
+        bool $isRemoved = false,
+        ?Context $context = null
     ): NodeInterface {
         $node = $this->createMock(NodeInterface::class);
         $node->method('getNodeType')->willReturn($nodeType);
@@ -360,6 +528,18 @@ class WorkspacesControllerTest extends UnitTestCase
         $node->method('getPath')->willReturn($path);
         $node->method('getIndex')->willReturn($index);
         $node->method('getParent')->willReturn($parent);
+        $node->method('getContext')->willReturn($context);
+        return $node;
+    }
+
+    /**
+     * A node that only has to answer with a label, as a link target or as the
+     * value of a reference property.
+     */
+    private function createLabelledNode(string $label): NodeInterface
+    {
+        $node = $this->createMock(NodeInterface::class);
+        $node->method('getLabel')->willReturn($label);
         return $node;
     }
 

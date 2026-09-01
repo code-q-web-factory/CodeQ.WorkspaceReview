@@ -13,6 +13,13 @@ stay unchanged.
   shown with their translated `editorOptions.values` labels (e.g.
   "Kein Abstand" instead of `none`). Booleans render as Yes/No, references as
   node labels.
+- **Rich-text aware diff**: changes the text diff cannot see, because it strips
+  all tags, are compared on the markup level: a link pointing somewhere else
+  (internal `node://` and `asset://` targets resolved to page and asset names),
+  words that were linked or unlinked, and formatting such as bold, italic or a
+  changed heading level. Added or removed links are only reported while the
+  surrounding wording is unchanged — once the text changed too, the text diff
+  owns the story.
 - **Readable positions**: a moved node shows its place among its siblings
   ("Position 2 von 3 → 1 von 3") instead of the sparse internal sorting index
   ("100 → 150"). An index that only changed because the siblings were renumbered

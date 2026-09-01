@@ -11,6 +11,9 @@
             <trans-unit id="value.empty" xml:space="preserve">
                 <source>empty</source>
             </trans-unit>
+            <trans-unit id="value.formatNone" xml:space="preserve">
+                <source>no formatting</source>
+            </trans-unit>
             <trans-unit id="visibility.label" xml:space="preserve">
                 <source>Visibility</source>
             </trans-unit>
@@ -49,6 +52,57 @@
             </trans-unit>
             <trans-unit id="position.ordinalOfTotal" xml:space="preserve">
                 <source>{0} of {1}</source>
+            </trans-unit>
+            <trans-unit id="link.detail" xml:space="preserve">
+                <source>Link “{0}”</source>
+            </trans-unit>
+            <trans-unit id="link.detailAttribute" xml:space="preserve">
+                <source>Link “{0}” – {1}</source>
+            </trans-unit>
+            <trans-unit id="link.attribute.target" xml:space="preserve">
+                <source>window</source>
+            </trans-unit>
+            <trans-unit id="link.attribute.title" xml:space="preserve">
+                <source>title</source>
+            </trans-unit>
+            <trans-unit id="link.target.newTab" xml:space="preserve">
+                <source>New tab</source>
+            </trans-unit>
+            <trans-unit id="link.target.sameTab" xml:space="preserve">
+                <source>Same tab</source>
+            </trans-unit>
+            <trans-unit id="link.none" xml:space="preserve">
+                <source>not linked</source>
+            </trans-unit>
+            <trans-unit id="formatting.detail" xml:space="preserve">
+                <source>“{0}”</source>
+            </trans-unit>
+            <trans-unit id="format.bold" xml:space="preserve">
+                <source>bold</source>
+            </trans-unit>
+            <trans-unit id="format.italic" xml:space="preserve">
+                <source>italic</source>
+            </trans-unit>
+            <trans-unit id="format.underline" xml:space="preserve">
+                <source>underlined</source>
+            </trans-unit>
+            <trans-unit id="format.strikethrough" xml:space="preserve">
+                <source>struck through</source>
+            </trans-unit>
+            <trans-unit id="format.subscript" xml:space="preserve">
+                <source>subscript</source>
+            </trans-unit>
+            <trans-unit id="format.superscript" xml:space="preserve">
+                <source>superscript</source>
+            </trans-unit>
+            <trans-unit id="format.code" xml:space="preserve">
+                <source>code</source>
+            </trans-unit>
+            <trans-unit id="format.highlight" xml:space="preserve">
+                <source>highlighted</source>
+            </trans-unit>
+            <trans-unit id="format.heading" xml:space="preserve">
+                <source>Heading {0}</source>
             </trans-unit>
             <group id="summary.texts" restype="x-gettext-plurals">
                 <trans-unit id="summary.texts[0]" xml:space="preserve">
@@ -104,6 +158,22 @@
                 </trans-unit>
                 <trans-unit id="summary.movedElements[1]" xml:space="preserve">
                     <source>{0} moved elements</source>
+                </trans-unit>
+            </group>
+            <group id="summary.links" restype="x-gettext-plurals">
+                <trans-unit id="summary.links[0]" xml:space="preserve">
+                    <source>{0} link change</source>
+                </trans-unit>
+                <trans-unit id="summary.links[1]" xml:space="preserve">
+                    <source>{0} link changes</source>
+                </trans-unit>
+            </group>
+            <group id="summary.formatting" restype="x-gettext-plurals">
+                <trans-unit id="summary.formatting[0]" xml:space="preserve">
+                    <source>{0} formatting change</source>
+                </trans-unit>
+                <trans-unit id="summary.formatting[1]" xml:space="preserve">
+                    <source>{0} formatting changes</source>
                 </trans-unit>
             </group>
         </body>

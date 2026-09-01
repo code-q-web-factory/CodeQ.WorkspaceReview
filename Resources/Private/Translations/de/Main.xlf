@@ -14,6 +14,10 @@
                 <source>empty</source>
                 <target>leer</target>
             </trans-unit>
+            <trans-unit id="value.formatNone" xml:space="preserve">
+                <source>no formatting</source>
+                <target>ohne Formatierung</target>
+            </trans-unit>
             <trans-unit id="visibility.label" xml:space="preserve">
                 <source>Visibility</source>
                 <target>Sichtbarkeit</target>
@@ -65,6 +69,74 @@
             <trans-unit id="position.ordinalOfTotal" xml:space="preserve">
                 <source>{0} of {1}</source>
                 <target>{0} von {1}</target>
+            </trans-unit>
+            <trans-unit id="link.detail" xml:space="preserve">
+                <source>Link “{0}”</source>
+                <target>Link „{0}“</target>
+            </trans-unit>
+            <trans-unit id="link.detailAttribute" xml:space="preserve">
+                <source>Link “{0}” – {1}</source>
+                <target>Link „{0}“ – {1}</target>
+            </trans-unit>
+            <trans-unit id="link.attribute.target" xml:space="preserve">
+                <source>window</source>
+                <target>Fenster</target>
+            </trans-unit>
+            <trans-unit id="link.attribute.title" xml:space="preserve">
+                <source>title</source>
+                <target>Titel</target>
+            </trans-unit>
+            <trans-unit id="link.target.newTab" xml:space="preserve">
+                <source>New tab</source>
+                <target>Neuer Tab</target>
+            </trans-unit>
+            <trans-unit id="link.target.sameTab" xml:space="preserve">
+                <source>Same tab</source>
+                <target>Gleicher Tab</target>
+            </trans-unit>
+            <trans-unit id="link.none" xml:space="preserve">
+                <source>not linked</source>
+                <target>nicht verlinkt</target>
+            </trans-unit>
+            <trans-unit id="formatting.detail" xml:space="preserve">
+                <source>“{0}”</source>
+                <target>„{0}“</target>
+            </trans-unit>
+            <trans-unit id="format.bold" xml:space="preserve">
+                <source>bold</source>
+                <target>fett</target>
+            </trans-unit>
+            <trans-unit id="format.italic" xml:space="preserve">
+                <source>italic</source>
+                <target>kursiv</target>
+            </trans-unit>
+            <trans-unit id="format.underline" xml:space="preserve">
+                <source>underlined</source>
+                <target>unterstrichen</target>
+            </trans-unit>
+            <trans-unit id="format.strikethrough" xml:space="preserve">
+                <source>struck through</source>
+                <target>durchgestrichen</target>
+            </trans-unit>
+            <trans-unit id="format.subscript" xml:space="preserve">
+                <source>subscript</source>
+                <target>tiefgestellt</target>
+            </trans-unit>
+            <trans-unit id="format.superscript" xml:space="preserve">
+                <source>superscript</source>
+                <target>hochgestellt</target>
+            </trans-unit>
+            <trans-unit id="format.code" xml:space="preserve">
+                <source>code</source>
+                <target>Code</target>
+            </trans-unit>
+            <trans-unit id="format.highlight" xml:space="preserve">
+                <source>highlighted</source>
+                <target>hervorgehoben</target>
+            </trans-unit>
+            <trans-unit id="format.heading" xml:space="preserve">
+                <source>Heading {0}</source>
+                <target>Überschrift {0}</target>
             </trans-unit>
             <group id="summary.texts" restype="x-gettext-plurals">
                 <trans-unit id="summary.texts[0]" xml:space="preserve">
@@ -134,6 +206,26 @@
                 <trans-unit id="summary.movedElements[1]" xml:space="preserve">
                     <source>{0} moved elements</source>
                     <target>{0} verschobene Elemente</target>
+                </trans-unit>
+            </group>
+            <group id="summary.links" restype="x-gettext-plurals">
+                <trans-unit id="summary.links[0]" xml:space="preserve">
+                    <source>{0} link change</source>
+                    <target>{0} Link-Änderung</target>
+                </trans-unit>
+                <trans-unit id="summary.links[1]" xml:space="preserve">
+                    <source>{0} link changes</source>
+                    <target>{0} Link-Änderungen</target>
+                </trans-unit>
+            </group>
+            <group id="summary.formatting" restype="x-gettext-plurals">
+                <trans-unit id="summary.formatting[0]" xml:space="preserve">
+                    <source>{0} formatting change</source>
+                    <target>{0} Formatierungsänderung</target>
+                </trans-unit>
+                <trans-unit id="summary.formatting[1]" xml:space="preserve">
+                    <source>{0} formatting changes</source>
+                    <target>{0} Formatierungsänderungen</target>
                 </trans-unit>
             </group>
         </body>

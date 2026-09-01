@@ -8,6 +8,7 @@ namespace CodeQ\WorkspaceReview\Controller\Module\Management;
  * This file is part of the CodeQ.WorkspaceReview package.
  */
 
+use CodeQ\WorkspaceReview\Diff\RichTextDiffer;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\ContentRepository\Domain\Model\NodeType;
 use Neos\ContentRepository\Domain\Model\Workspace;
@@ -17,6 +18,7 @@ use Neos\Flow\I18n\EelHelper\TranslationHelper;
 use Neos\Flow\I18n\Locale;
 use Neos\Media\Domain\Model\AssetInterface;
 use Neos\Media\Domain\Model\ImageInterface;
+use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Neos\Controller\Module\Management\WorkspacesController as NeosWorkspacesController;
 use Neos\Neos\Service\UserService as BackendUserService;
 
@@ -31,6 +33,9 @@ use Neos\Neos\Service\UserService as BackendUserService;
  *   before/after values instead of being silently dropped
  * - node visibility changes appear as an explicit change entry
  * - HTML entities are decoded before diffing, so titles show "&" not "&amp;"
+ * - rich-text changes the text diff cannot see (a link pointing somewhere
+ *   else, words that became bold) are reported on the markup level, with
+ *   internal link targets resolved to the page or asset they point at
  * - a node moved among its siblings shows its position, not the sparse
  *   internal sorting index
  * - every changed node is guaranteed a visible explanation
@@ -72,6 +77,20 @@ class WorkspacesController extends NeosWorkspacesController
     protected $backendUserService;
 
     /**
+     * @Flow\Inject
+     * @var RichTextDiffer
+     */
+    protected $richTextDiffer;
+
+    /**
+     * Resolves the "asset://<uuid>" targets of rich-text links to asset names.
+     *
+     * @Flow\Inject
+     * @var AssetRepository
+     */
+    protected $assetRepository;
+
+    /**
      * Adds a human-readable per-document change summary on top of the site
      * changes computed by the core controller.
      *
@@ -97,7 +116,17 @@ class WorkspacesController extends NeosWorkspacesController
      */
     protected function renderDocumentSummary(array $document): string
     {
-        $counts = ['created' => 0, 'deleted' => 0, 'moved' => 0, 'texts' => 0, 'media' => 0, 'settings' => 0, 'visibility' => 0];
+        $counts = [
+            'created' => 0,
+            'deleted' => 0,
+            'moved' => 0,
+            'texts' => 0,
+            'media' => 0,
+            'settings' => 0,
+            'visibility' => 0,
+            'links' => 0,
+            'formatting' => 0,
+        ];
         foreach ($document['changes'] ?? [] as $change) {
             /** @var NodeInterface $node */
             $node = $change['node'];
@@ -137,6 +166,12 @@ class WorkspacesController extends NeosWorkspacesController
                     case 'visibility':
                         $counts['visibility']++;
                         break;
+                    case 'link':
+                        $counts['links']++;
+                        break;
+                    case 'formatting':
+                        $counts['formatting']++;
+                        break;
                 }
             }
         }
@@ -149,6 +184,8 @@ class WorkspacesController extends NeosWorkspacesController
             'media' => 'summary.media',
             'settings' => 'summary.settings',
             'visibility' => 'summary.visibility',
+            'links' => 'summary.links',
+            'formatting' => 'summary.formatting',
         ];
         $parts = [];
         foreach ($labelIds as $countKey => $labelId) {
@@ -191,9 +228,16 @@ class WorkspacesController extends NeosWorkspacesController
                 // equality with the published value is the only valid skip.
                 continue;
             }
-            $change = $this->renderPropertyChange($propertyName, $originalPropertyValue, $changedPropertyValue, $changedNode);
-            if ($change !== null) {
-                $contentChanges[$propertyName] = $change;
+            foreach ($this->renderPropertyChange($propertyName, $originalPropertyValue, $changedPropertyValue, $changedNode) as $index => $entry) {
+                // One property can yield several entries (a text diff plus the
+                // rich-text findings), so each of them needs its own key.
+                $suffix = $index === 0 ? '' : '#rt' . $index;
+                if ($index > 0) {
+                    // All entries describe the same field; repeating its name
+                    // would read as several changed fields instead of one.
+                    $entry['propertyLabel'] = '';
+                }
+                $contentChanges[$propertyName . $suffix] = $entry;
             }
         }
 
@@ -409,9 +453,14 @@ class WorkspacesController extends NeosWorkspacesController
 
     /**
      * Classifies a single property change and renders it human-readable.
-     * Returns null if the change turns out to be invisible after formatting.
+     *
+     * Returns a list of change entries, because one rich-text property can
+     * carry several independent stories (a text edit plus a changed link).
+     * An empty list means the difference is not a real editorial change.
+     *
+     * @return array<int, array<string, mixed>>
      */
-    protected function renderPropertyChange(string $propertyName, $originalValue, $changedValue, NodeInterface $changedNode): ?array
+    protected function renderPropertyChange(string $propertyName, $originalValue, $changedValue, NodeInterface $changedNode): array
     {
         $propertyLabel = $this->getPropertyLabel($propertyName, $changedNode);
         $isRemoved = $changedNode->isRemoved();
@@ -421,34 +470,36 @@ class WorkspacesController extends NeosWorkspacesController
             && ($changedValue instanceof ImageInterface || $changedValue === null)
             && ($originalValue !== null || $changedValue !== null)
         ) {
-            return [
+            return [[
                 'type' => 'image',
                 'propertyLabel' => $propertyLabel,
                 'original' => $this->loadAsset($originalValue),
                 'changed' => $isRemoved ? null : $this->loadAsset($changedValue),
-            ];
+            ]];
         }
 
         if ($originalValue instanceof AssetInterface || $changedValue instanceof AssetInterface) {
-            return [
+            return [[
                 'type' => 'asset',
                 'propertyLabel' => $propertyLabel,
                 'original' => $this->loadAsset($originalValue),
                 'changed' => $isRemoved ? null : $this->loadAsset($changedValue),
-            ];
+            ]];
         }
 
         if ($originalValue instanceof \DateTimeInterface || $changedValue instanceof \DateTimeInterface) {
             $bothDates = $originalValue instanceof \DateTimeInterface && $changedValue instanceof \DateTimeInterface;
             if ($bothDates && $originalValue->getTimestamp() === $changedValue->getTimestamp() && !$isRemoved) {
-                return null;
+                // The two values describe the same moment, so there is
+                // nothing to report.
+                return [];
             }
-            return [
+            return [[
                 'type' => 'datetime',
                 'propertyLabel' => $propertyLabel,
                 'original' => $originalValue,
                 'changed' => $isRemoved ? null : $changedValue,
-            ];
+            ]];
         }
 
         // Values with a select/toggle editor, booleans, arrays (references,
@@ -459,25 +510,184 @@ class WorkspacesController extends NeosWorkspacesController
             $originalLabel = $this->renderValueLabel($originalValue, $propertyName, $changedNode);
             $changedLabel = $isRemoved ? $this->translateOwn('value.empty') : $this->renderValueLabel($changedValue, $propertyName, $changedNode);
             if ($originalLabel === $changedLabel) {
-                return null;
+                return [];
             }
-            return [
+            return [[
                 'type' => 'value',
                 'propertyLabel' => $propertyLabel,
                 'original' => $originalLabel,
                 'changed' => $changedLabel,
-            ];
+            ]];
         }
 
+        $entries = [];
         $diffHtml = $this->renderTextDiff((string)($originalValue ?? ''), $isRemoved ? '' : (string)($changedValue ?? ''));
-        if ($diffHtml === null) {
-            return null;
+        if ($diffHtml !== null) {
+            $entries[] = [
+                'type' => 'text',
+                'propertyLabel' => $propertyLabel,
+                'diffHtml' => $diffHtml,
+            ];
+        }
+        if (is_string($originalValue) && is_string($changedValue) && !$isRemoved) {
+            // The text diff strips all tags, so link and formatting edits are
+            // invisible to it and are compared on the markup level instead.
+            foreach ($this->richTextDiffer->compare($originalValue, $changedValue) as $finding) {
+                $entries[] = $this->renderRichTextFinding($finding, $propertyLabel, $changedNode);
+            }
+        }
+        return $entries;
+    }
+
+    /**
+     * Turns one finding of the rich-text comparison into a review entry, where
+     * the detail line names the affected link or passage and the before/after
+     * values name what changed about it.
+     *
+     * @param array<string, mixed> $finding
+     * @return array<string, mixed>
+     */
+    protected function renderRichTextFinding(array $finding, string $propertyLabel, NodeInterface $changedNode): array
+    {
+        return match ($finding['kind']) {
+            'linkTarget' => $this->renderLinkTargetChange($finding, $propertyLabel, $changedNode),
+            'linkAttribute' => [
+                'type' => 'link',
+                'propertyLabel' => $propertyLabel,
+                'detail' => $this->translateOwn('link.detailAttribute', [
+                    $finding['linkText'],
+                    $this->translateOwn('link.attribute.' . $finding['attribute']),
+                ]),
+                'original' => $this->renderLinkAttributeValue($finding['attribute'], $finding['original']),
+                'changed' => $this->renderLinkAttributeValue($finding['attribute'], $finding['changed']),
+            ],
+            'linkAdded' => [
+                'type' => 'link',
+                'propertyLabel' => $propertyLabel,
+                'detail' => $this->translateOwn('link.detail', [$finding['linkText']]),
+                'original' => $this->translateOwn('link.none'),
+                'changed' => $this->renderLinkTargetLabel($finding['href'], $changedNode),
+            ],
+            'linkRemoved' => [
+                'type' => 'link',
+                'propertyLabel' => $propertyLabel,
+                'detail' => $this->translateOwn('link.detail', [$finding['linkText']]),
+                'original' => $this->renderLinkTargetLabel($finding['href'], $changedNode),
+                'changed' => $this->translateOwn('link.none'),
+            ],
+            'formatting' => [
+                'type' => 'formatting',
+                'propertyLabel' => $propertyLabel,
+                'detail' => $this->translateOwn('formatting.detail', [$finding['text']]),
+                'original' => $this->renderMarkList($finding['originalMarks']),
+                'changed' => $this->renderMarkList($finding['changedMarks']),
+            ],
+        };
+    }
+
+    /**
+     * Shows both targets of a re-pointed link by name. Two different targets
+     * that happen to carry the same title would read as "X → X", so such a pair
+     * falls back to the raw hrefs, which do differ.
+     *
+     * @param array<string, mixed> $finding
+     * @return array<string, mixed>
+     */
+    protected function renderLinkTargetChange(array $finding, string $propertyLabel, NodeInterface $changedNode): array
+    {
+        $original = $this->renderLinkTargetLabel($finding['original'], $changedNode);
+        $changed = $this->renderLinkTargetLabel($finding['changed'], $changedNode);
+        if ($original === $changed) {
+            $original = $finding['original'];
+            $changed = $finding['changed'];
         }
         return [
-            'type' => 'text',
+            'type' => 'link',
             'propertyLabel' => $propertyLabel,
-            'diffHtml' => $diffHtml,
+            'detail' => $this->translateOwn('link.detail', [$finding['linkText']]),
+            'original' => $original,
+            'changed' => $changed,
         ];
+    }
+
+    /**
+     * Neos stores internal links as "node://<uuid>" and "asset://<uuid>", which
+     * tells a reviewer nothing, so both are resolved to the title of what they
+     * point at. Anything that cannot be resolved keeps its raw href: an opaque
+     * target still beats a name we do not have.
+     */
+    protected function renderLinkTargetLabel(string $href, NodeInterface $changedNode): string
+    {
+        try {
+            if (preg_match('#^node://([^/?\#]+)#', $href, $matches) === 1) {
+                $context = $changedNode->getContext();
+                $node = $context === null ? null : $context->getNodeByIdentifier($matches[1]);
+                return $node === null ? $href : $this->orRawHref($this->cleanLabel($node->getLabel()), $href);
+            }
+            if (preg_match('#^asset://([^/?\#]+)#', $href, $matches) === 1) {
+                return $this->renderAssetTargetLabel($matches[1], $href);
+            }
+        } catch (\Throwable $exception) {
+            // Resolving reads from the content repository and the asset
+            // storage; a review page must render even when they cannot answer.
+            return $href;
+        }
+        return $href;
+    }
+
+    protected function renderAssetTargetLabel(string $identifier, string $href): string
+    {
+        $asset = $this->assetRepository->findByIdentifier($identifier);
+        if (!$asset instanceof AssetInterface) {
+            return $href;
+        }
+        $title = $this->cleanLabel((string)$asset->getTitle());
+        if ($title !== '') {
+            return $title;
+        }
+        // Assets uploaded without a title are known to editors by their file name.
+        $resource = $asset->getResource();
+        return $resource === null ? $href : $this->orRawHref($this->cleanLabel($resource->getFilename()), $href);
+    }
+
+    protected function orRawHref(string $label, string $href): string
+    {
+        return $label === '' ? $href : $label;
+    }
+
+    /**
+     * Names what a link attribute value means to a reader: the target keyword
+     * describes where the link opens, every other attribute shows as stored.
+     */
+    protected function renderLinkAttributeValue(string $attribute, ?string $value): string
+    {
+        if ($attribute === 'target') {
+            if ($value === null || $value === '') {
+                return $this->translateOwn('link.target.sameTab');
+            }
+            return strtolower($value) === '_blank' ? $this->translateOwn('link.target.newTab') : $value;
+        }
+        return $value === null || $value === '' ? $this->translateOwn('value.empty') : $value;
+    }
+
+    /**
+     * Names a set of formatting marks in the reviewer's language.
+     *
+     * @param string[] $marks
+     */
+    protected function renderMarkList(array $marks): string
+    {
+        if ($marks === []) {
+            return $this->translateOwn('value.formatNone');
+        }
+        $labels = array_map(function (string $mark): string {
+            // Heading levels share one label with the level as an argument.
+            if (preg_match('/^heading(\d)$/', $mark, $matches) === 1) {
+                return $this->translateOwn('format.heading', [$matches[1]]);
+            }
+            return $this->translateOwn('format.' . $mark);
+        }, $marks);
+        return implode(', ', $labels);
     }
 
     /**
