@@ -66,7 +66,11 @@ class WorkspacesControllerTest extends UnitTestCase
         self::assertSame('value', $changes['_accessRoles']['type']);
         self::assertSame('value', $changes['_nodeType']['type']);
         self::assertSame('value', $changes['_path']['type']);
-        self::assertSame('value', $changes['_index']['type']);
+        // Without a reachable parent the position falls back to the raw index.
+        self::assertSame(
+            ['type' => 'value', 'propertyLabel' => 'system.position', 'original' => '100', 'changed' => '200'],
+            $changes['_index']
+        );
     }
 
     /** @test */
@@ -116,6 +120,91 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /** @test */
+    public function renderContentChangesShowsAMovedNodeAsAPositionAmongItsSiblings(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode(
+            $nodeType,
+            [],
+            100,
+            $this->createParent('/sites/example', ['first', 'moved', 'third'])
+        );
+        $changedNode = $this->createNode(
+            $nodeType,
+            [],
+            250,
+            $this->createParent('/sites/example', ['moved', 'first', 'third'])
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'value',
+                'propertyLabel' => 'system.position',
+                'original' => 'position.ordinalOfTotal(2, 3)',
+                'changed' => 'position.ordinalOfTotal(1, 3)',
+            ],
+            $changes['_index'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesCallsARenumberedSortingIndexAnInternalChange(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode(
+            $nodeType,
+            [],
+            100,
+            $this->createParent('/sites/example', ['first', 'moved', 'third'])
+        );
+        $changedNode = $this->createNode(
+            $nodeType,
+            [],
+            150,
+            $this->createParent('/sites/example', ['first', 'moved', 'third'])
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        self::assertSame(
+            [
+                'type' => 'note',
+                'propertyLabel' => 'system.position',
+                'message' => 'position.internalOnly',
+            ],
+            $changes['_index'] ?? null
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesLeavesThePositionOutWhenTheNodeChangedItsParent(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode(
+            $nodeType,
+            [],
+            100,
+            $this->createParent('/sites/example', ['first', 'moved']),
+            '/sites/example/moved'
+        );
+        $changedNode = $this->createNode(
+            $nodeType,
+            [],
+            250,
+            $this->createParent('/sites/other', ['moved']),
+            '/sites/other/moved'
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // An ordinal within another list would suggest a reordering that never
+        // happened; the changed path already states the move.
+        self::assertSame(['_path'], array_keys($changes));
+    }
+
+    /** @test */
     public function renderContentChangesSkipsUntouchedDefaultsOfARemovedNode(): void
     {
         $nodeType = $this->createNodeType('Vendor.Site:Element', [], ['spaceBelow' => 'normal']);
@@ -125,6 +214,70 @@ class WorkspacesControllerTest extends UnitTestCase
         $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
 
         self::assertSame([], $changes);
+    }
+
+    /** @test */
+    public function renderContentChangesCallsAnElementInsertedAboveAnInternalChange(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode(
+            $nodeType,
+            [],
+            100,
+            $this->createParent('/sites/example', ['first', 'moved'])
+        );
+        $changedNode = $this->createNode(
+            $nodeType,
+            [],
+            200,
+            $this->createParent('/sites/example', ['first', 'neu', 'moved'])
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // The element still follows "first"; only the new sibling in between
+        // renumbered the indices.
+        self::assertSame(
+            [
+                '_index' => [
+                    'type' => 'note',
+                    'propertyLabel' => 'system.position',
+                    'message' => 'position.internalOnly',
+                ],
+            ],
+            $changes
+        );
+    }
+
+    /** @test */
+    public function renderContentChangesCountsOnlyPagesWhenRankingAPage(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Page', isDocument: true);
+        $originalNode = $this->createNode(
+            $nodeType,
+            [],
+            100,
+            $this->createParent('/sites/example', ['main'], ['first', 'moved', 'third'])
+        );
+        $changedNode = $this->createNode(
+            $nodeType,
+            [],
+            50,
+            $this->createParent('/sites/example', ['main'], ['moved', 'first', 'third'])
+        );
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // The page's own content collection is no sibling in the page order.
+        self::assertSame(
+            [
+                'type' => 'value',
+                'propertyLabel' => 'system.position',
+                'original' => 'position.ordinalOfTotal(2, 3)',
+                'changed' => 'position.ordinalOfTotal(1, 3)',
+            ],
+            $changes['_index'] ?? null
+        );
     }
 
     /**
@@ -152,42 +305,99 @@ class WorkspacesControllerTest extends UnitTestCase
                 return $this->originalNode;
             }
 
+            /**
+             * Stands in for the translator: assertions name the label id they
+             * expect, and its arguments show which values were passed in.
+             */
             protected function translateOwn(string $id, array $arguments = [], ?int $quantity = null): string
             {
-                return $id;
+                return $arguments === [] ? $id : $id . '(' . implode(', ', $arguments) . ')';
             }
         };
     }
 
-    private function createNodeType(string $name, array $properties = [], array $defaultValues = []): NodeType
-    {
+    private function createNodeType(
+        string $name,
+        array $properties = [],
+        array $defaultValues = [],
+        bool $isDocument = false
+    ): NodeType {
         $nodeType = $this->createMock(NodeType::class);
         $nodeType->method('getName')->willReturn($name);
         $nodeType->method('getProperties')->willReturn($properties);
         $nodeType->method('getDefaultValuesForProperties')->willReturn($defaultValues);
+        $nodeType->method('isOfType')->willReturnCallback(
+            static fn($superType): bool => $isDocument && $superType === 'Neos.Neos:Document'
+        );
         return $nodeType;
     }
 
     /**
      * A node whose system fields all hold the same values, so only the given
-     * properties can produce change entries.
+     * properties, index and parent can produce change entries.
      */
-    private function createNode(NodeType $nodeType, array $properties, bool $isRemoved = false): NodeInterface
-    {
+    private function createNode(
+        NodeType $nodeType,
+        array $properties,
+        int $index = 1,
+        ?NodeInterface $parent = null,
+        string $path = '/sites/example/moved',
+        bool $isRemoved = false
+    ): NodeInterface {
         $node = $this->createMock(NodeInterface::class);
         $node->method('getNodeType')->willReturn($nodeType);
         $node->method('getProperties')->willReturn(new ArrayPropertyCollection($properties));
         $node->method('getProperty')->willReturnCallback(
             static fn($propertyName) => $properties[$propertyName] ?? null
         );
+        $node->method('getIdentifier')->willReturn('moved');
         $node->method('isHidden')->willReturn(false);
         $node->method('isRemoved')->willReturn($isRemoved);
         $node->method('getHiddenBeforeDateTime')->willReturn(null);
         $node->method('getHiddenAfterDateTime')->willReturn(null);
         $node->method('isHiddenInIndex')->willReturn(false);
         $node->method('getAccessRoles')->willReturn([]);
-        $node->method('getPath')->willReturn('/sites/example/moved');
-        $node->method('getIndex')->willReturn(1);
+        $node->method('getPath')->willReturn($path);
+        $node->method('getIndex')->willReturn($index);
+        $node->method('getParent')->willReturn($parent);
         return $node;
+    }
+
+    /**
+     * The children are answered per node type filter, mirroring the content
+     * repository: a page lists its sub pages, a collection its elements.
+     *
+     * @param string[] $contentChildIdentifiers children of "!Neos.Neos:Document"
+     * @param string[] $documentChildIdentifiers children of "Neos.Neos:Document"
+     */
+    private function createParent(
+        string $path,
+        array $contentChildIdentifiers,
+        array $documentChildIdentifiers = []
+    ): NodeInterface {
+        $contentChildren = $this->createChildNodes($contentChildIdentifiers);
+        $documentChildren = $this->createChildNodes($documentChildIdentifiers);
+
+        $parent = $this->createMock(NodeInterface::class);
+        $parent->method('getPath')->willReturn($path);
+        $parent->method('getChildNodes')->willReturnCallback(
+            static fn($nodeTypeFilter = null): array => $nodeTypeFilter === 'Neos.Neos:Document'
+                ? $documentChildren
+                : $contentChildren
+        );
+        return $parent;
+    }
+
+    /**
+     * @param string[] $identifiers
+     * @return NodeInterface[]
+     */
+    private function createChildNodes(array $identifiers): array
+    {
+        return array_map(function (string $identifier): NodeInterface {
+            $child = $this->createMock(NodeInterface::class);
+            $child->method('getIdentifier')->willReturn($identifier);
+            return $child;
+        }, $identifiers);
     }
 }

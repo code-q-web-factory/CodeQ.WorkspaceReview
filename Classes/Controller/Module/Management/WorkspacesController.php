@@ -31,6 +31,8 @@ use Neos\Neos\Service\UserService as BackendUserService;
  *   before/after values instead of being silently dropped
  * - node visibility changes appear as an explicit change entry
  * - HTML entities are decoded before diffing, so titles show "&" not "&amp;"
+ * - a node moved among its siblings shows its position, not the sparse
+ *   internal sorting index
  * - every changed node is guaranteed a visible explanation
  *
  * @Flow\Scope("singleton")
@@ -112,7 +114,14 @@ class WorkspacesController extends NeosWorkspacesController
             if ($change['isMoved'] ?? false) {
                 $counts['moved']++;
             }
-            foreach ($change['contentChanges'] ?? [] as $contentChange) {
+            foreach ($change['contentChanges'] ?? [] as $contentChangeKey => $contentChange) {
+                // A reordering within the same parent keeps the node path, so
+                // the core "isMoved" flag stays false; the position entry is
+                // recognizable by its key and counts as a move, not a setting.
+                if ($contentChangeKey === '_index' && $contentChange['type'] === 'value') {
+                    $counts['moved']++;
+                    continue;
+                }
                 switch ($contentChange['type']) {
                     case 'text':
                         $counts['texts']++;
@@ -232,6 +241,14 @@ class WorkspacesController extends NeosWorkspacesController
                 continue;
             }
 
+            if ($propertyName === '_index') {
+                $positionChange = $this->renderPositionChange($originalNode, $changedNode);
+                if ($positionChange !== null) {
+                    $changes['_index'] = $positionChange;
+                }
+                continue;
+            }
+
             if ($originalValue instanceof \DateTimeInterface || $changedValue instanceof \DateTimeInterface) {
                 $changes[$propertyName] = [
                     'type' => 'datetime',
@@ -279,6 +296,115 @@ class WorkspacesController extends NeosWorkspacesController
             return implode(', ', array_map([$this, 'renderSystemFieldValue'], $value));
         }
         return $this->cleanLabel((string)$value);
+    }
+
+    /**
+     * Describes a changed sorting index as the node's position among its
+     * siblings, because the raw index is a sparse internal number ("100 →
+     * 150") that tells a reviewer nothing. Returns null when no position can
+     * be stated honestly.
+     */
+    protected function renderPositionChange(NodeInterface $originalNode, NodeInterface $changedNode): ?array
+    {
+        $originalParent = $originalNode->getParent();
+        $changedParent = $changedNode->getParent();
+        if ($originalParent === null || $changedParent === null) {
+            return $this->renderRawPositionChange($originalNode, $changedNode);
+        }
+        if ($originalParent->getPath() !== $changedParent->getPath()) {
+            // Ordinals of two different sibling lists are not comparable; the
+            // path entry and the "moved" badge already tell that story.
+            return null;
+        }
+
+        $nodeTypeFilter = $changedNode->getNodeType()->isOfType('Neos.Neos:Document')
+            ? 'Neos.Neos:Document'
+            : '!Neos.Neos:Document';
+        $originalSiblings = $this->collectSiblingIdentifiers($originalParent, $nodeTypeFilter);
+        $changedSiblings = $this->collectSiblingIdentifiers($changedParent, $nodeTypeFilter);
+        // Siblings that exist on one side only - created or deleted in this
+        // workspace - would shift the ordinal without anything having moved, so
+        // both sides are ranked among the siblings they share.
+        $sharedSiblings = array_intersect($originalSiblings, $changedSiblings);
+
+        $originalPosition = $this->findSiblingPosition($originalSiblings, $sharedSiblings, $originalNode->getIdentifier());
+        $changedPosition = $this->findSiblingPosition($changedSiblings, $sharedSiblings, $changedNode->getIdentifier());
+        if ($originalPosition === null || $changedPosition === null) {
+            return $this->renderRawPositionChange($originalNode, $changedNode);
+        }
+
+        $propertyLabel = $this->translateOwn('system.position');
+        if ($originalPosition['ordinal'] === $changedPosition['ordinal']) {
+            // Re-sorting the siblings or inserting one above renumbers indices,
+            // so a node can get a new index while keeping the place the reader
+            // sees it in relative to the elements that already existed.
+            return [
+                'type' => 'note',
+                'propertyLabel' => $propertyLabel,
+                'message' => $this->translateOwn('position.internalOnly'),
+            ];
+        }
+        return [
+            'type' => 'value',
+            'propertyLabel' => $propertyLabel,
+            'original' => $this->translateOwn('position.ordinalOfTotal', [$originalPosition['ordinal'], $originalPosition['total']]),
+            'changed' => $this->translateOwn('position.ordinalOfTotal', [$changedPosition['ordinal'], $changedPosition['total']]),
+        ];
+    }
+
+    /**
+     * Falls back to the raw sorting index when the node's surroundings are
+     * unavailable: an unexplained number still beats hiding the change.
+     */
+    protected function renderRawPositionChange(NodeInterface $originalNode, NodeInterface $changedNode): array
+    {
+        return [
+            'type' => 'value',
+            'propertyLabel' => $this->translateOwn('system.position'),
+            'original' => $this->renderSystemFieldValue($originalNode->getIndex()),
+            'changed' => $this->renderSystemFieldValue($changedNode->getIndex()),
+        ];
+    }
+
+    /**
+     * Reads the identifiers of the parent's children in document order, limited
+     * to the node's own kind: a page is ordered among pages, a content element
+     * among the elements of its collection. The list is read in the node's own
+     * context, which shows hidden and removed nodes alike, so the ordinals of
+     * the base and the user workspace stay comparable.
+     *
+     * @return string[]
+     */
+    protected function collectSiblingIdentifiers(NodeInterface $parent, string $nodeTypeFilter): array
+    {
+        $identifiers = [];
+        foreach ($parent->getChildNodes($nodeTypeFilter) as $sibling) {
+            $identifiers[] = $sibling->getIdentifier();
+        }
+        return $identifiers;
+    }
+
+    /**
+     * Ranks a node among the siblings both workspaces know about.
+     *
+     * @param string[] $identifiers sibling identifiers in document order
+     * @param string[] $sharedIdentifiers identifiers present on both sides
+     * @return array{ordinal: int, total: int}|null null if the node is not among the shared siblings
+     */
+    protected function findSiblingPosition(array $identifiers, array $sharedIdentifiers, string $identifier): ?array
+    {
+        $ordinal = null;
+        $total = 0;
+        foreach ($identifiers as $siblingIdentifier) {
+            if (!in_array($siblingIdentifier, $sharedIdentifiers, true)) {
+                continue;
+            }
+            $total++;
+            if ($siblingIdentifier === $identifier) {
+                $ordinal = $total;
+            }
+        }
+        return $ordinal === null ? null : ['ordinal' => $ordinal, 'total' => $total];
     }
 
     /**

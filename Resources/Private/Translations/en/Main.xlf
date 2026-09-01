@@ -44,6 +44,12 @@
             <trans-unit id="system.position" xml:space="preserve">
                 <source>Position</source>
             </trans-unit>
+            <trans-unit id="position.internalOnly" xml:space="preserve">
+                <source>Internal re-sorting – the visible order stays unchanged.</source>
+            </trans-unit>
+            <trans-unit id="position.ordinalOfTotal" xml:space="preserve">
+                <source>{0} of {1}</source>
+            </trans-unit>
             <group id="summary.texts" restype="x-gettext-plurals">
                 <trans-unit id="summary.texts[0]" xml:space="preserve">
                     <source>{0} text</source>

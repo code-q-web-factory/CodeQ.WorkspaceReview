@@ -13,6 +13,10 @@ stay unchanged.
   shown with their translated `editorOptions.values` labels (e.g.
   "Kein Abstand" instead of `none`). Booleans render as Yes/No, references as
   node labels.
+- **Readable positions**: a moved node shows its place among its siblings
+  ("Position 2 von 3 → 1 von 3") instead of the sparse internal sorting index
+  ("100 → 150"). An index that only changed because the siblings were renumbered
+  is named as internal re-sorting.
 - **No invisible changes**: every changed node shows a reason. Visibility
   changes appear as an explicit entry, a property changed back to its NodeType
   default is reported instead of silently dropped, and nodes without any
