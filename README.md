@@ -5,9 +5,10 @@ The package replaces only the controller and the change rendering of the
 existing module — publish/discard behavior, module path and permissions 
 stay unchanged.
 
-![The workspace module listing one card per changed node: a link retargeted to
-another page, a link that now opens in a new tab, a readable position, a
-formatting change and the notes for changes that stay
+![The workspace module listing one card per changed node: a word-level diff of
+an edited paragraph, a created and a hidden element with their badges, a
+readable position, links retargeted to another page or opening in a new tab, a
+formatting change and a note for a change that stays
 invisible](Documentation/workspace-review.png)
 
 ## What it improves over the core module
@@ -52,7 +53,7 @@ changed, it says so instead of leaving an empty row.
 
 | Entry | Appears when | Reads like |
 | --- | --- | --- |
-| Text | the wording changed | `… beginnt jeweils um ~~18~~ 19 Uhr …` |
+| Text | the wording changed | `… startet am ~~15.~~ 1. September, Karten kosten ~~12~~ 14 Euro …` |
 | Link | a link points elsewhere, opens differently, or words were linked or unlinked | `Link "Anfahrt und Kontakt" · Text Hero → Image Hero` |
 | Formatting | the same words carry different formatting | `"18 Uhr," · no formatting → bold` |
 | Value | a property changed, shown with its editor labels | `Abstand unten · Groß → Klein` |
@@ -60,6 +61,11 @@ changed, it says so instead of leaving an empty row.
 | Image, Asset | media was replaced | the published and the new file side by side |
 | Visibility | a node was hidden or made visible | `Element was hidden` |
 | Note | nothing renderable changed | one of the three sentences below |
+
+Only the edited words are marked; an untouched run longer than two dozen words
+collapses to the words next to the edit plus an ellipsis, so a single changed
+date does not reprint the whole paragraph. The card header carries the state of
+the node itself — created, deleted, moved or hidden — as a badge.
 
 ### Links and formatting
 
