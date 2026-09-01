@@ -17,4 +17,5 @@
       'CodeQ.WorkspaceReview': 'resource://CodeQ.WorkspaceReview/Private/Partials'
       'Neos.Neos': 'resource://Neos.Neos/Private/Partials'
     layoutRootPaths:
+      'CodeQ.WorkspaceReview': 'resource://Neos.Neos/Private/Layouts'
       'Neos.Neos': 'resource://Neos.Neos/Private/Layouts'

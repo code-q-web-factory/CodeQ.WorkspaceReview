@@ -30,6 +30,34 @@
                 <source>No visible changes (internal update)</source>
                 <target>Keine sichtbaren Änderungen (interne Aktualisierung)</target>
             </trans-unit>
+            <trans-unit id="system.hiddenBefore" xml:space="preserve">
+                <source>Hide before</source>
+                <target>Verstecken bis</target>
+            </trans-unit>
+            <trans-unit id="system.hiddenAfter" xml:space="preserve">
+                <source>Hide after</source>
+                <target>Verstecken nach</target>
+            </trans-unit>
+            <trans-unit id="system.hiddenInIndex" xml:space="preserve">
+                <source>Hide in menus</source>
+                <target>In Menüs verbergen</target>
+            </trans-unit>
+            <trans-unit id="system.accessRoles" xml:space="preserve">
+                <source>Access roles</source>
+                <target>Zugriffsrollen</target>
+            </trans-unit>
+            <trans-unit id="system.nodeType" xml:space="preserve">
+                <source>Type</source>
+                <target>Typ</target>
+            </trans-unit>
+            <trans-unit id="system.path" xml:space="preserve">
+                <source>Path</source>
+                <target>Pfad</target>
+            </trans-unit>
+            <trans-unit id="system.position" xml:space="preserve">
+                <source>Position</source>
+                <target>Position</target>
+            </trans-unit>
             <group id="summary.texts" restype="x-gettext-plurals">
                 <trans-unit id="summary.texts[0]" xml:space="preserve">
                     <source>{0} text</source>

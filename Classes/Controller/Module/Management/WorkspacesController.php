@@ -9,6 +9,7 @@ namespace CodeQ\WorkspaceReview\Controller\Module\Management;
  */
 
 use Neos\ContentRepository\Domain\Model\NodeInterface;
+use Neos\ContentRepository\Domain\Model\NodeType;
 use Neos\ContentRepository\Domain\Model\Workspace;
 use Neos\Diff\SequenceMatcher;
 use Neos\Flow\Annotations as Flow;
@@ -47,6 +48,20 @@ class WorkspacesController extends NeosWorkspacesController
      * Inserted/deleted runs longer than this are shortened in the middle.
      */
     protected const EDITED_RUN_COLLAPSE_THRESHOLD = 50;
+
+    /**
+     * Editorially relevant Neos system fields which are stored outside the
+     * regular property collection and therefore need explicit comparison.
+     */
+    protected const SYSTEM_FIELD_DEFINITIONS = [
+        '_hiddenBeforeDateTime' => ['getter' => 'getHiddenBeforeDateTime', 'label' => 'system.hiddenBefore'],
+        '_hiddenAfterDateTime' => ['getter' => 'getHiddenAfterDateTime', 'label' => 'system.hiddenAfter'],
+        '_hiddenInIndex' => ['getter' => 'isHiddenInIndex', 'label' => 'system.hiddenInIndex'],
+        '_accessRoles' => ['getter' => 'getAccessRoles', 'label' => 'system.accessRoles'],
+        '_nodeType' => ['getter' => 'getNodeType', 'label' => 'system.nodeType'],
+        '_path' => ['getter' => 'getPath', 'label' => 'system.path'],
+        '_index' => ['getter' => 'getIndex', 'label' => 'system.position'],
+    ];
 
     /**
      * @Flow\Inject
@@ -173,6 +188,10 @@ class WorkspacesController extends NeosWorkspacesController
             ];
         }
 
+        if ($originalNode !== null) {
+            $contentChanges += $this->renderSystemFieldChanges($originalNode, $changedNode);
+        }
+
         // Guarantee an explanation: a node that is neither removed, new nor
         // moved but has no renderable property change would otherwise appear
         // in the list without any stated reason.
@@ -187,6 +206,70 @@ class WorkspacesController extends NeosWorkspacesController
         }
 
         return $contentChanges;
+    }
+
+    /**
+     * Compares Neos system fields, which NodeInterface::getProperties() does
+     * not expose, and renders every actual change as a regular review entry.
+     */
+    protected function renderSystemFieldChanges(NodeInterface $originalNode, NodeInterface $changedNode): array
+    {
+        $changes = [];
+        foreach (self::SYSTEM_FIELD_DEFINITIONS as $propertyName => $definition) {
+            $getter = $definition['getter'];
+            $originalValue = $originalNode->{$getter}();
+            $changedValue = $changedNode->{$getter}();
+            if ($this->systemFieldValuesAreEqual($originalValue, $changedValue)) {
+                continue;
+            }
+
+            if ($originalValue instanceof \DateTimeInterface || $changedValue instanceof \DateTimeInterface) {
+                $changes[$propertyName] = [
+                    'type' => 'datetime',
+                    'propertyLabel' => $this->translateOwn($definition['label']),
+                    'original' => $originalValue,
+                    'changed' => $changedValue,
+                ];
+                continue;
+            }
+
+            $changes[$propertyName] = [
+                'type' => 'value',
+                'propertyLabel' => $this->translateOwn($definition['label']),
+                'original' => $this->renderSystemFieldValue($originalValue),
+                'changed' => $this->renderSystemFieldValue($changedValue),
+            ];
+        }
+        return $changes;
+    }
+
+    protected function systemFieldValuesAreEqual($originalValue, $changedValue): bool
+    {
+        if ($originalValue instanceof \DateTimeInterface && $changedValue instanceof \DateTimeInterface) {
+            return $originalValue->getTimestamp() === $changedValue->getTimestamp();
+        }
+        if ($originalValue instanceof NodeType && $changedValue instanceof NodeType) {
+            return $originalValue->getName() === $changedValue->getName();
+        }
+        return $originalValue === $changedValue;
+    }
+
+    protected function renderSystemFieldValue($value): string
+    {
+        if ($value instanceof NodeType) {
+            $label = (string)$value->getLabel();
+            return $label === '' ? $value->getName() : $this->translateShorthand($label);
+        }
+        if ($value === null || $value === '' || $value === []) {
+            return $this->translateOwn('value.empty');
+        }
+        if (is_bool($value)) {
+            return $this->translateOwn($value ? 'value.yes' : 'value.no');
+        }
+        if (is_array($value)) {
+            return implode(', ', array_map([$this, 'renderSystemFieldValue'], $value));
+        }
+        return $this->cleanLabel((string)$value);
     }
 
     /**
