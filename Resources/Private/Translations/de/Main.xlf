@@ -2,6 +2,22 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
     <file original="" product-name="CodeQ.WorkspaceReview" source-language="en" target-language="de" datatype="plaintext">
         <body>
+            <trans-unit id="status.created" xml:space="preserve">
+                <source>created</source>
+                <target>erstellt</target>
+            </trans-unit>
+            <trans-unit id="status.deleted" xml:space="preserve">
+                <source>deleted</source>
+                <target>gelöscht</target>
+            </trans-unit>
+            <trans-unit id="status.moved" xml:space="preserve">
+                <source>moved</source>
+                <target>verschoben</target>
+            </trans-unit>
+            <trans-unit id="status.hidden" xml:space="preserve">
+                <source>hidden</source>
+                <target>ausgeblendet</target>
+            </trans-unit>
             <trans-unit id="value.yes" xml:space="preserve">
                 <source>Yes</source>
                 <target>Ja</target>

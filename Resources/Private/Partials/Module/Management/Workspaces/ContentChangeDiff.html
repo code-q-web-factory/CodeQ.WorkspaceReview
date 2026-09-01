@@ -4,16 +4,22 @@
 <div class="codeq-review-change">
     <div class="codeq-review-change__header">
         <span class="codeq-review-change__label" title="{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}" data-neos-toggle="tooltip"><review:cleanLabel value="{change.node.label}" /></span>
+        <f:comment>The status labels come from this package: the German targets of
+        Neos.Neos "workspaces.legend.moved", ".hidden" and ".edited" all read
+        "erstellt", which would label a hidden element as a created one.</f:comment>
         <f:if condition="{change.node.removed}">
             <f:then>
-                <span class="codeq-review-badge codeq-review-badge--deleted">{neos:backend.translate(id: 'workspaces.legend.deleted', source: 'Modules', package: 'Neos.Neos')}</span>
+                <span class="codeq-review-badge codeq-review-badge--deleted">{neos:backend.translate(id: 'status.deleted', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
             </f:then>
             <f:else>
+                <f:if condition="{change.isNew}">
+                    <span class="codeq-review-badge codeq-review-badge--created">{neos:backend.translate(id: 'status.created', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+                </f:if>
                 <f:if condition="{change.isMoved}">
-                    <span class="codeq-review-badge codeq-review-badge--moved">{neos:backend.translate(id: 'workspaces.legend.moved', source: 'Modules', package: 'Neos.Neos')}</span>
+                    <span class="codeq-review-badge codeq-review-badge--moved">{neos:backend.translate(id: 'status.moved', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
                 </f:if>
                 <f:if condition="{change.node.hidden}">
-                    <span class="codeq-review-badge codeq-review-badge--hidden">{neos:backend.translate(id: 'workspaces.legend.hidden', source: 'Modules', package: 'Neos.Neos')}</span>
+                    <span class="codeq-review-badge codeq-review-badge--hidden">{neos:backend.translate(id: 'status.hidden', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
                 </f:if>
             </f:else>
         </f:if>

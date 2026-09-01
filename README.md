@@ -39,7 +39,10 @@ invisible](Documentation/workspace-review.png)
 - **Per-page summary**: each document row shows a summary like
   "2 Texte · 1 Medium · 1 Einstellung".
 - **Status badges**: created / deleted / moved / hidden are shown as visible
-  badges per change instead of only a row background color.
+  badges per change instead of only a row background color. Their labels come
+  from this package: the German targets of the matching Neos labels
+  (`workspaces.legend.moved`, `.hidden`, `.edited`) all read "erstellt", which
+  would label a hidden element as a created one.
 
 ## What a reviewer sees
 
