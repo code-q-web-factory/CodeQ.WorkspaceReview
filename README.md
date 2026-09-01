@@ -1,141 +1,107 @@
-# Prototype - CodeQ.WorkspaceReview
+# CodeQ.WorkspaceReview
 
-Improve the human-readable workspace change review for the Neos CMS.
-The package replaces only the controller and the change rendering of the 
-existing module — publish/discard behavior, module path and permissions 
-stay unchanged.
+Understand exactly what will change before publishing a Neos workspace.
 
-![The workspace module listing one card per changed node: a word-level diff of
-an edited paragraph, a created and a hidden element with their badges, a
-readable position, links retargeted to another page or opening in a new tab, a
-formatting change and a note for a change that stays
-invisible](Documentation/workspace-review.png)
+CodeQ.WorkspaceReview replaces ambiguous rows and duplicated text blocks with focused, human-readable change explanations.
 
-## What it improves over the core module
+![Neos Core workspace review compared with the improved review, with annotations highlighting readable configuration, summaries, word-level diffs, statuses, explanations, links and formatting](Documentation/workspace-review-comparison.png)
 
-- **Word-level text diffs**: small edits no longer mark whole paragraphs as
-  changed. Long unchanged passages are collapsed with an ellipsis.
-- **Editor-aware value labels**: values of select box and toggle editors are
-  shown with their translated `editorOptions.values` labels (e.g.
-  "Kein Abstand" instead of `none`). Booleans render as Yes/No, references as
-  node labels.
-- **Rich-text aware diff**: changes the text diff cannot see, because it strips
-  all tags, are compared on the markup level: a link pointing somewhere else
-  (internal `node://` and `asset://` targets resolved to page and asset names),
-  words that were linked or unlinked, and formatting such as bold, italic or a
-  changed heading level. Added or removed links are only reported while the
-  surrounding wording is unchanged — once the text changed too, the text diff
-  owns the story.
-- **Readable positions**: a moved node shows its place among its siblings
-  ("Position 2 von 3 → 1 von 3") instead of the sparse internal sorting index
-  ("100 → 150"). An index that only changed because the siblings were renumbered
-  is named as internal re-sorting.
-- **No invisible changes**: every changed node shows a reason. Visibility
-  changes appear as an explicit entry, a property changed back to its NodeType
-  default is reported instead of silently dropped, and nodes without any
-  renderable property change get a note - either "no visible changes" or, when
-  the node was edited and reverted, that it matches the published version again.
-- **Correct entity handling**: HTML entities are decoded before diffing and
-  in labels, so titles show "&" instead of "&amp;".
-- **Per-page summary**: each document row shows a summary like
-  "2 Texte · 1 Medium · 1 Einstellung".
-- **Status badges**: created / deleted / moved / hidden are shown as visible
-  badges per change instead of only a row background color. Their labels come
-  from this package: the German targets of the matching Neos labels
-  (`workspaces.legend.moved`, `.hidden`, `.edited`) all read "erstellt", which
-  would label a hidden element as a created one.
+> This package is an experiment focused on exploring the workspace review UI.
+> It is not optimized for code quality or production readiness.
 
-## What a reviewer sees
+The package changes only the controller and review rendering. Publishing, discarding, the module path and permissions keep their existing behavior.
 
-Every changed node becomes one card, and a card lists one entry per thing that
-would change on publish. A card never stays silent: when nothing renderable
-changed, it says so instead of leaving an empty row.
+## Improvements at a glance
 
-| Entry | Appears when | Reads like |
-| --- | --- | --- |
-| Text | the wording changed | `… startet am ~~15.~~ 1. September, Karten kosten ~~12~~ 14 Euro …` |
-| Link | a link points elsewhere, opens differently, or words were linked or unlinked | `Link "Anfahrt und Kontakt" · Text Hero → Image Hero` |
-| Formatting | the same words carry different formatting | `"18 Uhr," · no formatting → bold` |
-| Value | a property changed, shown with its editor labels | `Abstand unten · Groß → Klein` |
-| Position | a node was reordered among its siblings | `Position · 3 of 3 → 1 of 3` |
-| Image, Asset | media was replaced | the published and the new file side by side |
-| Visibility | a node was hidden or made visible | `Element was hidden` |
-| Note | nothing renderable changed | one of the three sentences below |
-
-Only the edited words are marked; an untouched run longer than two dozen words
-collapses to the words next to the edit plus an ellipsis, so a single changed
-date does not reprint the whole paragraph. The card header carries the state of
-the node itself — created, deleted, moved or hidden — as a badge.
-
-### Links and formatting
-
-A word-level diff strips markup before comparing, so an editor who only
-retargets a link or emphasises a word produces no visible difference at all.
-Those edits are therefore compared a second time on the markup level:
-
-- **A link points somewhere else.** Internal targets are resolved, so the entry
-  reads `Text Hero → Image Hero` instead of two `node://` UUIDs. When both
-  targets resolve to the same name, the raw URIs are shown, so the row is never
-  `X → X`.
-- **A link behaves differently.** A link that starts opening in a new window
-  reads `Link "PDF herunterladen" – window · Same tab → New tab`.
-- **Words were linked or unlinked.** Only reported while the surrounding
-  wording is unchanged. Once the text changed too, the text diff already shows
-  the passage and a guess about the link would contradict it.
-- **Formatting changed.** Bold, italic, underline, strikethrough, sub- and
-  superscript, code, highlight and the heading level, reported per passage.
-
-Findings are deliberately conservative: what the comparison cannot attribute
-with certainty becomes a note rather than a guess.
-
-### The three notes
-
-They look similar but answer different questions, and the difference decides
-whether the reviewer has to open the preview at all:
-
-- **"Changed - the wording is unchanged, please check details in the preview."**
-  sits on a property whose stored value really differs while the words read the
-  same. The field is named, so the reviewer knows where to look. Typical causes
-  are a non-breaking space pasted in from a word processor, a changed `style` or
-  `class`, or a bullet list that became a numbered list.
-- **"Edited, but matching the published version again - no content differences
-  found."** means the node was touched and then set back. Publishing it has no
-  effect, so it can be discarded without reading further.
-- **"No visible changes (internal update)"** is the remaining case: the node
-  differs, but not in a way that can be attributed to a single field.
-
-## How it works
-
-- `Configuration/Settings.yaml` swaps the controller of the existing
-  `management/workspaces` module to
-  `CodeQ\WorkspaceReview\Controller\Module\Management\WorkspacesController`,
-  which extends the core controller and only replaces the diff pipeline.
-- `Classes/Diff/RichTextDiffer.php` performs the markup-level comparison. It
-  parses both values with `\DOMDocument`, pairs their links by identity first
-  and by label second, and compares formatting word by word. It needs no
-  injected dependencies and knows nothing about the content repository, so it
-  can be tested against real markup; turning its findings into labels and
-  translations is the controller's job.
-- `Configuration/Views.yaml` adds Neos.Neos template/partial/layout fallbacks,
-  so untouched actions (Index, New, Edit) keep using the core templates.
-- `Configuration/Policy.yaml` re-grants the inherited core controller actions:
-  the module's `ModulePrivilege` derives its method matcher from the configured
-  controller class, so after the swap the core class' woven policy interception
-  would deny inherited actions with only "Neos.Neos:AllControllerActions"
-  (abstain) matching. Without this file, the module answers 403.
-- Templates are resolved from this package first; only `Show.html`, the
-  `ContentChangeDiff` partial and the `DocumentBreadcrumb` partial are
-  overridden.
+- **Configurations become visible.** Select boxes, toggles and references use translated editor labels instead of raw stored values.
+- **Page summaries speed up review.** Each document shows a compact summary of its text, media, setting, link, visibility and element changes.
+- **Word-level diffs reduce noise.** Reviewers see the changed words instead of comparing two complete paragraphs. Long unchanged passages collapse to an ellipsis.
+- **Status and position are instantly clear.** Created, deleted, moved and hidden elements receive explicit badges. Positions use readable sibling numbers instead of sorting indexes.
+- **Every change has an explanation.** Visibility changes, reverted edits and internal updates no longer produce unexplained empty rows.
+- **Links and formatting become visible.** Retargeted links, window behavior, linked text and formatting changes are detected even when the wording remains unchanged.
 
 ## Installation
 
-The package lives in `DistributionPackages` and is installed through the
-path repository of the distribution:
+The package lives in `DistributionPackages` and is installed through the distribution's path repository:
 
 ```bash
 composer require codeq/workspace-review
 ./flow flow:cache:flush
 ```
+
+## What reviewers see
+
+Every changed node becomes one card with one entry for each effect publishing would have. When no renderable property changed, the card explains why instead of staying empty.
+
+
+| Entry        | Appears when                                                                 | Reads like                                                          |
+| ------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Text         | the wording changed                                                          | `… startet am ~~15.~~ 1. September, Karten kosten ~~12~~ 14 Euro …` |
+| Link         | a link points elsewhere, opens differently, or words were linked or unlinked | `Link "Anfahrt und Kontakt" · Text Hero → Image Hero`               |
+| Formatting   | the same words carry different formatting                                    | `"18 Uhr," · no formatting → bold`                                  |
+| Value        | a property changed, shown with its editor labels                             | `Abstand unten · Groß → Klein`                                      |
+| Position     | a node was reordered among its siblings                                      | `Position · 3 of 3 → 1 of 3`                                        |
+| Image, Asset | media was replaced                                                           | the published and the new file side by side                         |
+| Visibility   | a node was hidden or made visible                                            | `Element was hidden`                                                |
+| Note         | nothing renderable changed                                                   | an explanation of the remaining difference                          |
+
+
+The card header shows whether the node was created, deleted, moved or hidden. Only changed words are marked in the card body.
+
+## Detailed behavior
+
+
+
+### Text changes
+
+Text is compared word by word. An unchanged run longer than two dozen words collapses to the words surrounding the edit plus an ellipsis.
+
+HTML entities are decoded before comparison and in labels, so titles show `&` instead of `&`.
+
+### Configuration values
+
+Select boxes and toggles use translated `editorOptions.values` labels, such as “Kein Abstand” instead of `none`. Booleans render as Yes or No, and references render as node labels.
+
+A property changed back to its NodeType default is still reported instead of being silently omitted.
+
+### Links and formatting
+
+A text comparison cannot see markup-only edits. Rich text is therefore compared a second time to detect links and formatting while keeping the findings conservative.
+
+- **A link points somewhere else.** Internal `node://` and `asset://` targets resolve to page and asset names instead of exposing UUIDs.
+- **A link behaves differently.** A new-window change reads `Same tab → New tab`.
+- **Words were linked or unlinked.** This is reported when the surrounding wording is unchanged. When the text also changed, the text diff owns the explanation.
+- **Formatting changed.** Bold, italic, underline, strikethrough, subscript, superscript, code, highlight and heading-level changes are reported per passage.
+
+When two targets resolve to the same label, their raw URIs remain visible so the result never claims `X → X`.
+
+### Position and status
+
+A moved node shows its place among siblings, such as `3 of 3 → 1 of 3`, instead of an internal sorting index such as `100 → 150`.
+
+An index changed only by sibling renumbering is identified as internal re-sorting. Created, deleted, moved and hidden nodes receive explicit, correctly translated badges.
+
+### Changes without a visible diff
+
+The review uses three distinct notes when it cannot show a normal value comparison:
+
+- **“Changed – the wording is unchanged, please check details in the preview.”** The stored value differs, but the visible words do not. The property name tells the reviewer where to look.
+- **“Edited, but matching the published version again – no content differences found.”** The node was changed and then restored. Publishing it has no effect.
+- **“No visible changes (internal update).”** The node differs, but the change cannot be attributed to a renderable field.
+
+These distinctions help reviewers decide whether they need to open the preview or can safely discard a reverted change.
+
+## Technical implementation
+
+- `Configuration/Settings.yaml` replaces the controller of `management/workspaces` with `CodeQ\WorkspaceReview\Controller\Module\Management\WorkspacesController`.
+- The controller extends the Neos core controller and replaces only the diff pipeline.
+- `Classes/Diff/RichTextDiffer.php` parses markup with `\DOMDocument`, pairs links by identity and label, and compares formatting word by word.
+- The rich-text differ has no injected dependencies or content-repository knowledge. The controller resolves labels, references and translations.
+- `Configuration/Views.yaml` provides Neos template, partial and layout fallbacks, so untouched Index, New and Edit actions keep using the core views.
+- `Configuration/Policy.yaml` grants the inherited controller actions after the controller replacement. Without it, the module's method-based privilege matching would return 403.
+- Only `Show.html`, `ContentChangeDiff.html` and `DocumentBreadcrumb.html` override core templates.
+
+
 
 ## Tests
 
@@ -143,3 +109,4 @@ composer require codeq/workspace-review
 ddev exec bin/phpunit --configuration UnitTests.xml \
   DistributionPackages/CodeQ.WorkspaceReview/Tests/Unit
 ```
+
