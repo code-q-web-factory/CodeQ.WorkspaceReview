@@ -34,6 +34,14 @@
                 <source>no formatting</source>
                 <target>ohne Formatierung</target>
             </trans-unit>
+            <trans-unit id="diff.deleted" xml:space="preserve">
+                <source>deleted:</source>
+                <target>gelöscht:</target>
+            </trans-unit>
+            <trans-unit id="diff.added" xml:space="preserve">
+                <source>added:</source>
+                <target>hinzugefügt:</target>
+            </trans-unit>
             <trans-unit id="visibility.label" xml:space="preserve">
                 <source>Visibility</source>
                 <target>Sichtbarkeit</target>

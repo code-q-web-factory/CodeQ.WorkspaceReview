@@ -477,7 +477,28 @@ class WorkspacesControllerTest extends UnitTestCase
 
         self::assertSame(['text'], array_keys($changes));
         self::assertSame('text', $changes['text']['type']);
-        self::assertStringContainsString('<del>Wird gelöscht</del>', $changes['text']['diffHtml']);
+        self::assertStringContainsString('<del><span class="codeq-review-sr-only">diff.deleted </span>Wird gelöscht</del>', $changes['text']['diffHtml']);
+    }
+
+    /** @test */
+    public function renderContentChangesLabelsEveryEditedRunForScreenReaders(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Der Vorverkauf startet am 15. September.</p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Der Vorverkauf startet am 1. September.</p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        // The markers carry no visible text of their own: the hidden label is
+        // what tells a screen reader user which run was removed and which
+        // one was added.
+        self::assertSame(
+            'Der Vorverkauf startet am'
+            . ' <del><span class="codeq-review-sr-only">diff.deleted </span>15.</del>'
+            . ' <ins><span class="codeq-review-sr-only">diff.added </span>1.</ins>'
+            . ' September.',
+            $changes['text']['diffHtml']
+        );
     }
 
     /** @test */
