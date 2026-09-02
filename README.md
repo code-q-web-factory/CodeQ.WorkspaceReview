@@ -15,7 +15,7 @@ The package changes only the controller and review rendering. Publishing, discar
 
 - **Configurations become visible.** Select boxes, toggles and references use translated editor labels instead of raw stored values.
 - **Page summaries speed up review.** Each document shows a compact summary of its text, media, setting, link, visibility and element changes.
-- **Word-level diffs reduce noise.** Reviewers see the changed words instead of comparing two complete paragraphs. Long unchanged passages collapse to an ellipsis.
+- **Word-level diffs reduce noise.** Reviewers see the changed words instead of comparing two complete paragraphs. Long unchanged passages collapse to an ellipsis. Deleted words are struck through and added words underlined, so the diff does not rely on colour alone.
 - **Status and position are instantly clear.** Created, deleted, moved and hidden elements receive explicit badges. Positions use readable sibling numbers instead of sorting indexes.
 - **Every change has an explanation.** Visibility changes, reverted edits and internal updates no longer produce unexplained empty rows.
 - **Links and formatting become visible.** Retargeted links, window behavior, linked text and formatting changes are detected even when the wording remains unchanged.
@@ -55,6 +55,8 @@ The card header shows whether the node was created, deleted, moved or hidden. On
 ### Text changes
 
 Text is compared word by word. An unchanged run longer than two dozen words collapses to the words surrounding the edit plus an ellipsis.
+
+Deleted words are struck through and added words underlined in addition to their red and green colouring, so the kind of change stays readable with a colour vision deficiency, in greyscale and in forced-colours mode. Screen readers hear “deleted:” or “added:” before each edited run, because `<del>` and `<ins>` alone are not reliably announced.
 
 HTML entities are decoded before comparison and in labels, so titles show `&` instead of `&`.
 

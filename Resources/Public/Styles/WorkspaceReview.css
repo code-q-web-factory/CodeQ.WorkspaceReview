@@ -137,10 +137,18 @@
     white-space: normal;
 }
 
+/* Added words are underlined and deleted words struck through, so the kind
+   of change is readable without telling red from green (colour vision
+   deficiency, greyscale print, forced-colours mode, which drops the
+   backgrounds but keeps text decorations). The core module theme sets
+   text-decoration: none on ins/del, hence the !important. */
 .codeq-review-change .codeq-review-text ins {
     background: #dff2e4 !important;
     color: #0f5132 !important;
-    text-decoration: none;
+    text-decoration: underline !important;
+    text-decoration-color: #0f5132 !important;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
     padding: 1px 3px;
     border-radius: 3px;
     box-decoration-break: clone;
@@ -151,12 +159,26 @@
     background: #fbe7e7 !important;
     color: #96262b !important;
     text-decoration: line-through !important;
-    text-decoration-color: rgba(150, 38, 43, 0.7) !important;
-    text-decoration-thickness: 1px;
+    text-decoration-color: #96262b !important;
+    text-decoration-thickness: 1.5px;
     padding: 1px 3px;
     border-radius: 3px;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+}
+
+/* Read by screen readers, invisible otherwise: the "added:" / "deleted:"
+   label at the start of each edited run. */
+.codeq-review-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
 }
 
 .codeq-review-ellipsis {

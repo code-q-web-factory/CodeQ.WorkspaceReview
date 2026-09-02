@@ -26,6 +26,12 @@
             <trans-unit id="value.formatNone" xml:space="preserve">
                 <source>no formatting</source>
             </trans-unit>
+            <trans-unit id="diff.deleted" xml:space="preserve">
+                <source>deleted:</source>
+            </trans-unit>
+            <trans-unit id="diff.added" xml:space="preserve">
+                <source>added:</source>
+            </trans-unit>
             <trans-unit id="visibility.label" xml:space="preserve">
                 <source>Visibility</source>
             </trans-unit>

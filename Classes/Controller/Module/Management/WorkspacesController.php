@@ -854,14 +854,14 @@ class WorkspacesController extends NeosWorkspacesController
                     $html[] = $this->renderContextWords($words, $i1 === 0, $i2 === count($originalWords));
                     break;
                 case 'delete':
-                    $html[] = '<del>' . $this->renderEditedWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
+                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1));
                     break;
                 case 'insert':
-                    $html[] = '<ins>' . $this->renderEditedWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
+                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1));
                     break;
                 case 'replace':
-                    $html[] = '<del>' . $this->renderEditedWords(array_slice($originalWords, $i1, $i2 - $i1)) . '</del>';
-                    $html[] = '<ins>' . $this->renderEditedWords(array_slice($changedWords, $j1, $j2 - $j1)) . '</ins>';
+                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1));
+                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1));
                     break;
             }
         }
@@ -896,6 +896,25 @@ class WorkspacesController extends NeosWorkspacesController
     protected function escapeWords(array $words): string
     {
         return htmlspecialchars(implode(' ', $words), ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Wraps an edited word run in its <ins> or <del> marker. Screen readers
+     * do not reliably announce these elements, so the run starts with a
+     * visually hidden "added:" or "deleted:" label; sighted reviewers get
+     * the same information from the underline and strike-through the
+     * stylesheet adds, which do not depend on colour.
+     *
+     * @param string $tagName either "ins" or "del"
+     * @param string[] $words
+     */
+    protected function renderEditedRun(string $tagName, array $words): string
+    {
+        $label = $this->translateOwn($tagName === 'del' ? 'diff.deleted' : 'diff.added');
+        return '<' . $tagName . '>'
+            . '<span class="codeq-review-sr-only">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ' </span>'
+            . $this->renderEditedWords($words)
+            . '</' . $tagName . '>';
     }
 
     /**
