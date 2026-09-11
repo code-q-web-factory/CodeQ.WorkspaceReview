@@ -662,6 +662,42 @@ class WorkspacesControllerTest extends UnitTestCase
     }
 
     /**
+     * Changes are listed as their elements follow on the page: by sorting
+     * index below the document, a container ahead of the elements inside it,
+     * regardless of the order the repository returned them in.
+     *
+     * @test
+     */
+    public function sortChangesInPageOrderFollowsTheSortingIndicesBelowTheDocument(): void
+    {
+        $document = $this->createPositionedNode('/sites/site/page', 0, null);
+        $main = $this->createPositionedNode('/sites/site/page/main', 100, $document);
+        $first = $this->createPositionedNode('/sites/site/page/main/first', 100, $main);
+        $container = $this->createPositionedNode('/sites/site/page/main/container', 200, $main);
+        $inner = $this->createPositionedNode('/sites/site/page/main/container/items/inner', 100, $this->createPositionedNode('/sites/site/page/main/container/items', 100, $container));
+        $last = $this->createPositionedNode('/sites/site/page/main/last', 300, $main);
+        $changes = [
+            'main/last' => ['node' => $last],
+            'main/container/items/inner' => ['node' => $inner],
+            'main/first' => ['node' => $first],
+            'main/container' => ['node' => $container],
+        ];
+
+        $sorted = $this->createController(null)->sortChangesInPageOrderForTest($changes, $document);
+
+        self::assertSame(['main/first', 'main/container', 'main/container/items/inner', 'main/last'], array_keys($sorted));
+    }
+
+    private function createPositionedNode(string $path, int $index, ?NodeInterface $parent): NodeInterface
+    {
+        $node = $this->createMock(NodeInterface::class);
+        $node->method('getPath')->willReturn($path);
+        $node->method('getIndex')->willReturn($index);
+        $node->method('getParent')->willReturn($parent);
+        return $node;
+    }
+
+    /**
      * The sidebar shows the changed pages as a tree: the unchanged "blog" page
      * between the site and its changed post is listed as an ancestor, and a
      * post follows its parent even when a sibling like "blog-archive" sorts
@@ -906,6 +942,11 @@ class WorkspacesControllerTest extends UnitTestCase
             public function renderContentChangesForTest(NodeInterface $changedNode): array
             {
                 return $this->renderContentChanges($changedNode);
+            }
+
+            public function sortChangesInPageOrderForTest(array $changes, NodeInterface $documentNode): array
+            {
+                return $this->sortChangesInPageOrder($changes, $documentNode);
             }
 
             public function computePageTreeForTest(array $documents): array

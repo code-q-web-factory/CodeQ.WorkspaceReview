@@ -164,7 +164,8 @@ class WorkspacesController extends NeosWorkspacesController
     /**
      * Adds, on top of the site changes computed by the core controller, the
      * URIs the visual compare renders each document from and a "pages" list
-     * per dimension that orders the changed documents like the page tree.
+     * per dimension that orders the changed documents like the page tree, and
+     * puts the changes of each document into page order.
      *
      * @param Workspace $selectedWorkspace
      * @return array
@@ -175,6 +176,7 @@ class WorkspacesController extends NeosWorkspacesController
         foreach ($siteChanges as $siteKey => $site) {
             foreach ($site['documents'] as $dimension => $documents) {
                 foreach ($documents as $documentPath => $document) {
+                    $document['changes'] = $this->sortChangesInPageOrder($document['changes'] ?? [], $document['documentNode']);
                     $documents[$documentPath] = $this->addPreviewUris($document);
                 }
                 $siteChanges[$siteKey]['documents'][$dimension] = $documents;
@@ -182,6 +184,62 @@ class WorkspacesController extends NeosWorkspacesController
             }
         }
         return $siteChanges;
+    }
+
+    /**
+     * The core lists the changes of a document in the order the repository
+     * returns them, which is roughly the order they were made in. Reviewers
+     * read a page top to bottom, so the changes follow the page instead:
+     * sorted by the sorting indices from the document down to the node, an
+     * ancestor ahead of its descendants. Keys (relative paths) are kept.
+     *
+     * @param array<string, array> $changes
+     */
+    protected function sortChangesInPageOrder(array $changes, NodeInterface $documentNode): array
+    {
+        $positions = [];
+        foreach ($changes as $relativePath => $change) {
+            $positions[$relativePath] = $this->pagePositionOf($change['node'], $documentNode);
+        }
+        uksort($changes, function ($a, $b) use ($positions): int {
+            return $this->comparePagePositions($positions[$a], $positions[$b]) ?: strcmp((string)$a, (string)$b);
+        });
+        return $changes;
+    }
+
+    /**
+     * Lexicographic comparison of two index lists. PHP's own array comparison
+     * ranks by length first, which would put a deep element behind every
+     * shallow one instead of below its own container.
+     *
+     * @param int[] $a
+     * @param int[] $b
+     */
+    protected function comparePagePositions(array $a, array $b): int
+    {
+        $length = min(count($a), count($b));
+        for ($i = 0; $i < $length; $i++) {
+            if ($a[$i] !== $b[$i]) {
+                return $a[$i] <=> $b[$i];
+            }
+        }
+        return count($a) <=> count($b);
+    }
+
+    /**
+     * The sorting indices of the nodes between the document and the given
+     * node, top-down; comparing two such lists element by element yields the
+     * order in which the nodes appear on the page.
+     *
+     * @return int[]
+     */
+    protected function pagePositionOf(NodeInterface $node, NodeInterface $documentNode): array
+    {
+        $indices = [];
+        for ($current = $node; $current !== null && $current->getPath() !== $documentNode->getPath(); $current = $current->getParent()) {
+            $indices[] = $current->getIndex();
+        }
+        return array_reverse($indices);
     }
 
     /**
