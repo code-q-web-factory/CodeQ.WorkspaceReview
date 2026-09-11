@@ -638,35 +638,6 @@ class WorkspacesControllerTest extends UnitTestCase
         );
     }
 
-    /** @test */
-    public function renderDocumentSummaryCountsEveryKindOfContentChange(): void
-    {
-        $node = $this->createMock(NodeInterface::class);
-        $node->method('isRemoved')->willReturn(false);
-        $document = [
-            'changes' => [
-                [
-                    'node' => $node,
-                    'contentChanges' => [
-                        ['type' => 'text'],
-                        ['type' => 'value'],
-                        ['type' => 'link'],
-                        ['type' => 'formatting'],
-                        ['type' => 'note'],
-                        '_index' => ['type' => 'value'],
-                    ],
-                ],
-            ],
-        ];
-
-        $summary = $this->createController(null)->renderDocumentSummaryForTest($document);
-
-        self::assertSame(
-            'summary.movedElements(1) · summary.texts(1) · summary.settings(1) · summary.links(1) · summary.formatting(1) · summary.internal(1)',
-            $summary
-        );
-    }
-
     /**
      * The sidebar shows the changed pages as a tree: the unchanged "blog" page
      * between the site and its changed post is listed as an ancestor, and a
@@ -912,11 +883,6 @@ class WorkspacesControllerTest extends UnitTestCase
             public function renderContentChangesForTest(NodeInterface $changedNode): array
             {
                 return $this->renderContentChanges($changedNode);
-            }
-
-            public function renderDocumentSummaryForTest(array $document): string
-            {
-                return $this->renderDocumentSummary($document);
             }
 
             public function computePageTreeForTest(array $documents): array

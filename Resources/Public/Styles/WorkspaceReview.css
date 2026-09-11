@@ -678,13 +678,6 @@
     font-size: 11px;
 }
 
-.codeq-review-summary {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 18px;
-    color: #8c8c8c;
-}
-
 .codeq-review-page__actions {
     display: flex;
     flex: 0 0 auto;
@@ -718,8 +711,7 @@
     background: #00b53e;
 }
 
-.neos.neos-module .codeq-review-page--reviewed .codeq-review-page__title,
-.neos.neos-module .codeq-review-page--reviewed .codeq-review-summary {
+.neos.neos-module .codeq-review-page--reviewed .codeq-review-page__title {
     color: #adadad;
 }
 

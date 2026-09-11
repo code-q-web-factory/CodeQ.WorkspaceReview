@@ -4,7 +4,7 @@ Understand exactly what will change before publishing a Neos workspace.
 
 CodeQ.WorkspaceReview replaces ambiguous rows and duplicated text blocks with focused, human-readable change explanations.
 
-![Neos Core workspace review compared with the improved review, with annotations highlighting readable configuration, summaries, word-level diffs, statuses, explanations, links and formatting](Documentation/workspace-review-comparison.png)
+![Neos Core workspace review compared with the improved review, with annotations highlighting readable configuration, word-level diffs, statuses, explanations, links and formatting](Documentation/workspace-review-comparison.png)
 
 > This package is an experiment focused on exploring the workspace review UI.
 > It is not optimized for code quality or production readiness.
@@ -18,7 +18,6 @@ The package changes only the controller and review rendering. Publishing, discar
 - **Jump between changed pages.** A sticky left sidebar lists the changed pages as a tree styled like the backend page tree, with their content dimension. The current page stays highlighted as you scroll, and each page is a separate block in the review.
 
 - **Configurations become visible.** Select boxes, toggles and references use translated editor labels instead of raw stored values.
-- **Page summaries speed up review.** Each document shows a compact summary of its text, media, setting, link, visibility and element changes.
 - **Word-level diffs reduce noise.** Reviewers see the changed words instead of comparing two complete paragraphs. Long unchanged passages collapse to an ellipsis. Deleted words are struck through and added words underlined, so the diff does not rely on colour alone.
 - **Status and position are instantly clear.** Created, deleted, moved and hidden elements receive explicit badges. Positions use readable sibling numbers instead of sorting indexes.
 - **Every change has an explanation.** Visibility changes, reverted edits and internal updates no longer produce unexplained empty rows.

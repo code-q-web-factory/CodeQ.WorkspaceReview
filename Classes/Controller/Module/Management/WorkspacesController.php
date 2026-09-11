@@ -161,9 +161,9 @@ class WorkspacesController extends NeosWorkspacesController
     }
 
     /**
-     * Adds a human-readable per-document change summary on top of the site
-     * changes computed by the core controller, and a "pages" list per
-     * dimension that orders the changed documents like the page tree.
+     * Adds a "pages" list per dimension on top of the site changes computed
+     * by the core controller, ordering the changed documents like the page
+     * tree.
      *
      * @param Workspace $selectedWorkspace
      * @return array
@@ -173,10 +173,6 @@ class WorkspacesController extends NeosWorkspacesController
         $siteChanges = parent::computeSiteChanges($selectedWorkspace);
         foreach ($siteChanges as $siteKey => $site) {
             foreach ($site['documents'] as $dimension => $documents) {
-                foreach ($documents as $documentPath => $document) {
-                    $documents[$documentPath]['summary'] = $this->renderDocumentSummary($document);
-                }
-                $siteChanges[$siteKey]['documents'][$dimension] = $documents;
                 $siteChanges[$siteKey]['pages'][$dimension] = $this->computePageTree($documents);
             }
         }
@@ -222,97 +218,6 @@ class WorkspacesController extends NeosWorkspacesController
             $entries[$index]['hasChildren'] = isset($entries[$index + 1]) && $entries[$index + 1]['depth'] > $entry['depth'];
         }
         return $entries;
-    }
-
-    /**
-     * Builds a summary like "2 texts · 1 setting · 1 new element" for one
-     * changed document, counting change categories across all its nodes.
-     */
-    protected function renderDocumentSummary(array $document): string
-    {
-        $counts = [
-            'created' => 0,
-            'deleted' => 0,
-            'moved' => 0,
-            'texts' => 0,
-            'media' => 0,
-            'settings' => 0,
-            'visibility' => 0,
-            'links' => 0,
-            'formatting' => 0,
-            'internal' => 0,
-        ];
-        foreach ($document['changes'] ?? [] as $change) {
-            /** @var NodeInterface $node */
-            $node = $change['node'];
-            if ($node->isRemoved()) {
-                $counts['deleted']++;
-                continue;
-            }
-            if ($change['isNew'] ?? false) {
-                // A new node's property diff is all insertions; counting each
-                // property would inflate the summary, so count the node once.
-                $counts['created']++;
-                continue;
-            }
-            if ($change['isMoved'] ?? false) {
-                $counts['moved']++;
-            }
-            foreach ($change['contentChanges'] ?? [] as $contentChangeKey => $contentChange) {
-                // A reordering within the same parent keeps the node path, so
-                // the core "isMoved" flag stays false; the position entry is
-                // recognizable by its key and counts as a move, not a setting.
-                if ($contentChangeKey === '_index' && $contentChange['type'] === 'value') {
-                    $counts['moved']++;
-                    continue;
-                }
-                switch ($contentChange['type']) {
-                    case 'text':
-                        $counts['texts']++;
-                        break;
-                    case 'image':
-                    case 'asset':
-                        $counts['media']++;
-                        break;
-                    case 'value':
-                    case 'datetime':
-                        $counts['settings']++;
-                        break;
-                    case 'visibility':
-                        $counts['visibility']++;
-                        break;
-                    case 'link':
-                        $counts['links']++;
-                        break;
-                    case 'formatting':
-                        $counts['formatting']++;
-                        break;
-                    case 'note':
-                        $counts['internal']++;
-                        break;
-                }
-            }
-        }
-
-        $labelIds = [
-            'created' => 'summary.newElements',
-            'deleted' => 'summary.deletedElements',
-            'moved' => 'summary.movedElements',
-            'texts' => 'summary.texts',
-            'media' => 'summary.media',
-            'settings' => 'summary.settings',
-            'visibility' => 'summary.visibility',
-            'links' => 'summary.links',
-            'formatting' => 'summary.formatting',
-            'internal' => 'summary.internal',
-        ];
-        $parts = [];
-        foreach ($labelIds as $countKey => $labelId) {
-            if ($counts[$countKey] > 0) {
-                $parts[] = $this->translateOwn($labelId, [$counts[$countKey]], $counts[$countKey]);
-            }
-        }
-        return implode(' · ', $parts);
     }
 
     /**
