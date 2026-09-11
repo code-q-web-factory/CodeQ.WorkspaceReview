@@ -1,0 +1,12 @@
+# The visual compare loads pages through this route (see PreviewController).
+# It sits before the Neos.Neos routes (Settings.yaml), otherwise the backend
+# module route "neos/{module}" would claim the path.
+-
+  name: 'Workspace review: page rendering for the visual compare'
+  uriPattern: 'neos/workspace-review/preview'
+  defaults:
+    '@package': 'CodeQ.WorkspaceReview'
+    '@controller': 'Preview'
+    '@action': 'show'
+    '@format': 'html'
+  appendExceedingArguments: true

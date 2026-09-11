@@ -10,10 +10,16 @@ privilegeTargets:
     'CodeQ.WorkspaceReview:CoreWorkspacesControllerActions':
       label: Access to the inherited core workspace controller actions
       matcher: 'method(public Neos\Neos\Controller\Module\Management\WorkspacesController->(?!initialize).*Action())'
+    'CodeQ.WorkspaceReview:Preview':
+      label: Render a page of a reviewed workspace or of live for the visual compare
+      matcher: 'method(CodeQ\WorkspaceReview\Controller\PreviewController->showAction())'
 
 roles:
   'Neos.Neos:AbstractEditor':
     privileges:
       -
         privilegeTarget: 'CodeQ.WorkspaceReview:CoreWorkspacesControllerActions'
+        permission: GRANT
+      -
+        privilegeTarget: 'CodeQ.WorkspaceReview:Preview'
         permission: GRANT

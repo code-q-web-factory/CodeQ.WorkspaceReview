@@ -125,6 +125,29 @@ class WorkspacesControllerTest extends UnitTestCase
         self::assertSame([], $changes);
     }
 
+    /**
+     * The visual compare puts the diff in place of the text on the rendered
+     * page, so it gets the complete wording while the card stays collapsed.
+     *
+     * @test
+     */
+    public function renderContentChangesKeepsAnUncollapsedDiffForTheVisualCompare(): void
+    {
+        $nodeType = $this->createNodeType('Vendor.Site:Text');
+        $words = implode(' ', array_map(static fn(int $i): string => 'Wort' . $i, range(1, 40)));
+        $originalNode = $this->createNode($nodeType, ['text' => '<p>Alt ' . $words . '</p>']);
+        $changedNode = $this->createNode($nodeType, ['text' => '<p>Neu ' . $words . '</p>']);
+
+        $changes = $this->createController($originalNode)->renderContentChangesForTest($changedNode);
+
+        $change = $changes['text'];
+        self::assertSame('text', $change['type']);
+        self::assertStringContainsString('codeq-review-ellipsis', $change['diffHtml']);
+        self::assertStringNotContainsString('codeq-review-ellipsis', $change['diffHtmlFull']);
+        self::assertStringContainsString('Wort40', $change['diffHtmlFull']);
+        self::assertSame('Neu ' . $words, $change['changedText']);
+    }
+
     /** @test */
     public function renderContentChangesReportsALinkTargetTheTextDiffCannotSee(): void
     {

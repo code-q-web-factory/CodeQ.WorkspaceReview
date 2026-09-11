@@ -13,3 +13,25 @@ Neos:
                 - 'resource://CodeQ.WorkspaceReview/Public/Styles/WorkspaceReview.css'
               javaScripts:
                 - 'resource://CodeQ.WorkspaceReview/Public/JavaScript/PageNavigation.js'
+    fusion:
+      autoInclude:
+        # Marks content elements for the visual compare, see Root.fusion.
+        'CodeQ.WorkspaceReview': true
+
+  Flow:
+    mvc:
+      routes:
+        'CodeQ.WorkspaceReview':
+          position: 'before Neos.Neos'
+    security:
+      authentication:
+        providers:
+          'Neos.Neos:Backend':
+            requestPatterns:
+              # The backend session must also authenticate the preview
+              # rendering, which lives outside the module and the Neos
+              # controller namespaces the provider covers by default.
+              'CodeQ.WorkspaceReview:PreviewController':
+                pattern: ControllerObjectName
+                patternOptions:
+                  controllerObjectNamePattern: 'CodeQ\WorkspaceReview\Controller\PreviewController'

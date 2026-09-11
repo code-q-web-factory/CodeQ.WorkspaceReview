@@ -67,6 +67,48 @@
                 <source>show this overview</source>
             </trans-unit>
 
+            <trans-unit id="mode.label" xml:space="preserve">
+                <source>View</source>
+            </trans-unit>
+            <trans-unit id="mode.unified" xml:space="preserve">
+                <source>Change list</source>
+            </trans-unit>
+            <trans-unit id="mode.unifiedHelp" xml:space="preserve">
+                <source>Every change as a card with the changed words</source>
+            </trans-unit>
+            <trans-unit id="mode.visual" xml:space="preserve">
+                <source>Visual compare</source>
+            </trans-unit>
+            <trans-unit id="mode.visualHelp" xml:space="preserve">
+                <source>The page as it will look, with the changes marked in place</source>
+            </trans-unit>
+            <trans-unit id="status.edited" xml:space="preserve">
+                <source>changed</source>
+            </trans-unit>
+            <trans-unit id="visual.loading" xml:space="preserve">
+                <source>Loading the page…</source>
+            </trans-unit>
+            <trans-unit id="visual.unavailable" xml:space="preserve">
+                <source>The page could not be rendered for the visual compare.</source>
+            </trans-unit>
+            <trans-unit id="visual.newPage" xml:space="preserve">
+                <source>New page: everything on it is published for the first time.</source>
+            </trans-unit>
+            <trans-unit id="visual.removedPage" xml:space="preserve">
+                <source>Deleted page: shown as currently published, all of it is removed.</source>
+            </trans-unit>
+            <trans-unit id="visual.unplaced" xml:space="preserve">
+                <source>Deleted elements whose former place could not be determined</source>
+            </trans-unit>
+            <trans-unit id="visual.unlocated" xml:space="preserve">
+                <source>Not visible on the rendered page</source>
+            </trans-unit>
+            <trans-unit id="visual.showInList" xml:space="preserve">
+                <source>Show this change in the change list</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.toggleMode" xml:space="preserve">
+                <source>switch between change list and visual compare</source>
+            </trans-unit>
             <trans-unit id="status.created" xml:space="preserve">
                 <source>created</source>
             </trans-unit>

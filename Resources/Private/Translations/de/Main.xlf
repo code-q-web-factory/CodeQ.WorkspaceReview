@@ -88,6 +88,62 @@
                 <target>diese Übersicht anzeigen</target>
             </trans-unit>
 
+            <trans-unit id="mode.label" xml:space="preserve">
+                <source>View</source>
+                <target>Ansicht</target>
+            </trans-unit>
+            <trans-unit id="mode.unified" xml:space="preserve">
+                <source>Change list</source>
+                <target>Änderungsliste</target>
+            </trans-unit>
+            <trans-unit id="mode.unifiedHelp" xml:space="preserve">
+                <source>Every change as a card with the changed words</source>
+                <target>Jede Änderung als Karte mit den geänderten Wörtern</target>
+            </trans-unit>
+            <trans-unit id="mode.visual" xml:space="preserve">
+                <source>Visual compare</source>
+                <target>Visueller Vergleich</target>
+            </trans-unit>
+            <trans-unit id="mode.visualHelp" xml:space="preserve">
+                <source>The page as it will look, with the changes marked in place</source>
+                <target>Die Seite, wie sie aussehen wird, mit den Änderungen an ihrer Stelle markiert</target>
+            </trans-unit>
+            <trans-unit id="status.edited" xml:space="preserve">
+                <source>changed</source>
+                <target>geändert</target>
+            </trans-unit>
+            <trans-unit id="visual.loading" xml:space="preserve">
+                <source>Loading the page…</source>
+                <target>Seite wird geladen…</target>
+            </trans-unit>
+            <trans-unit id="visual.unavailable" xml:space="preserve">
+                <source>The page could not be rendered for the visual compare.</source>
+                <target>Die Seite konnte für den visuellen Vergleich nicht dargestellt werden.</target>
+            </trans-unit>
+            <trans-unit id="visual.newPage" xml:space="preserve">
+                <source>New page: everything on it is published for the first time.</source>
+                <target>Neue Seite: alle Inhalte werden erstmals veröffentlicht.</target>
+            </trans-unit>
+            <trans-unit id="visual.removedPage" xml:space="preserve">
+                <source>Deleted page: shown as currently published, all of it is removed.</source>
+                <target>Gelöschte Seite: dargestellt wie derzeit veröffentlicht, alle Inhalte werden entfernt.</target>
+            </trans-unit>
+            <trans-unit id="visual.unplaced" xml:space="preserve">
+                <source>Deleted elements whose former place could not be determined</source>
+                <target>Gelöschte Elemente, deren frühere Position nicht ermittelt werden konnte</target>
+            </trans-unit>
+            <trans-unit id="visual.unlocated" xml:space="preserve">
+                <source>Not visible on the rendered page</source>
+                <target>Auf der dargestellten Seite nicht sichtbar</target>
+            </trans-unit>
+            <trans-unit id="visual.showInList" xml:space="preserve">
+                <source>Show this change in the change list</source>
+                <target>Diese Änderung in der Änderungsliste zeigen</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.toggleMode" xml:space="preserve">
+                <source>switch between change list and visual compare</source>
+                <target>zwischen Änderungsliste und visuellem Vergleich wechseln</target>
+            </trans-unit>
             <trans-unit id="status.created" xml:space="preserve">
                 <source>created</source>
                 <target>erstellt</target>

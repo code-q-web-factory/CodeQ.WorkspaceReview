@@ -46,7 +46,7 @@
                     <div class="codeq-review-property__detail">{contentChange.detail}</div>
                 </f:if>
                 <f:if condition="{contentChange.type} === 'text'">
-                    <div class="codeq-review-text">{contentChange.diffHtml -> f:format.raw()}</div>
+                    <div class="codeq-review-text" data-review-text="{contentChange.changedText}">{contentChange.diffHtml -> f:format.raw()}<template data-review-diff>{contentChange.diffHtmlFull -> f:format.raw()}</template></div>
                 </f:if>
                 <f:if condition="{contentChange.type} === 'value' || {contentChange.type} === 'link' || {contentChange.type} === 'formatting'">
                     <span class="codeq-review-pill codeq-review-pill--old">{contentChange.original}</span>

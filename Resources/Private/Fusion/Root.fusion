@@ -1,0 +1,26 @@
+# While the workspace review renders a page for its visual compare (see
+# PreviewController), every content element carries the identifier of its
+# node. The review maps its change cards to the elements on the page through
+# this attribute, in the workspace rendering as well as in the live rendering.
+# Neos.Ui adds its own metadata only in backend contexts, which leaves the live
+# rendering unmarked; this marker does not depend on it.
+prototype(CodeQ.WorkspaceReview:NodeMarker) < prototype(Neos.Fusion:Augmenter) {
+    @if.isReviewPreview = ${request.controllerPackageKey == 'CodeQ.WorkspaceReview'}
+    data-codeq-review-node = ${node.identifier}
+}
+
+prototype(Neos.Neos:ContentComponent) {
+    @process.codeqWorkspaceReviewMarker = CodeQ.WorkspaceReview:NodeMarker
+}
+
+prototype(Neos.Neos:Content) {
+    @process.codeqWorkspaceReviewMarker = CodeQ.WorkspaceReview:NodeMarker
+}
+
+# The review renders workspace pages in a backend context, where Neos.Ui adds
+# its inline-editing scripts to the page head. Inside the compare frame there
+# is no editor host for them, so they stay out of this rendering.
+prototype(Neos.Neos:Page) {
+    head.javascriptBackendInformation.@if.isNotReviewPreview = ${request.controllerPackageKey != 'CodeQ.WorkspaceReview'}
+    head.guestFrameApplication.@if.isNotReviewPreview = ${request.controllerPackageKey != 'CodeQ.WorkspaceReview'}
+}

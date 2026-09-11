@@ -13,6 +13,7 @@ The package changes only the controller and review rendering. Publishing, discar
 
 ## Improvements at a glance
 
+- **See changes on the page.** A view switch shows either the change list or a visual compare: the page rendered as it will look, with created, changed, moved, hidden and deleted elements marked in place and the changed words highlighted in the text. Deleted elements are taken from the published page and shown with a red overlay.
 - **Track review progress.** Mark a page as reviewed to collapse it; the sidebar counts reviewed pages and remembers them per workspace, and flags a page that changed after it was reviewed.
 - **Review from the keyboard.** J/K, [ / ], V and Enter move through pages and changes and mark them reviewed; **?** opens the shortcut overview.
 - **Jump between changed pages.** A sticky left sidebar lists the changed pages as a tree styled like the backend page tree, with their content dimension. The current page stays highlighted as you scroll, and each page is a separate block in the review.
@@ -61,6 +62,16 @@ Every page header has a **Reviewed** toggle. Marking a page collapses its change
 
 Reviewed marks are stored in the browser per workspace, together with a signature of the page's changes (which nodes, last modified when). When a page is edited after it was reviewed, the mark is dropped on the next load and the page carries a **"Changed since your review"** badge; hovering or focusing the badge explains what happened. So nothing slips through unnoticed. The marks are a reviewer's own progress note; publishing and discarding ignore them.
 
+### Visual compare
+
+![Visual compare of a page with marked elements and an inline word diff](Documentation/workspace-review-visual.png)
+
+The switch above the review stream toggles between the **change list** (the cards described above) and the **visual compare**. In the visual compare each changed page is rendered in a frame as the reviewed workspace will publish it, and every changed element gets a coloured marker with its status and type: green for created, orange for changed, blue for moved, hatched grey for hidden. Deleted elements no longer exist in the workspace rendering; they are taken from the published rendering, put back next to a neighbour that still exists and covered in red. When no neighbour survived, they are listed at the end of the page. Text changes are shown in place: the changed words of the card diff replace the new wording in the element, so a reviewer reads the sentence with its deletions and insertions where it will appear.
+
+The marker label opens the corresponding card in the change list. Changes that cannot be found on the rendered page (for instance properties that do not render, or elements inside a closed accordion) are listed below the frame with the same link. A new page shows a green, a deleted page a red banner; the deleted page is rendered as it is currently published. The frame keeps the site's own scrollbar, links and forms in it are inert, and pages render only when they scroll into view. The chosen view is remembered in the browser.
+
+Pages are rendered through the package's own preview route (`neos/workspace-review/preview`) with the content cache switched off, so the marked-up rendering is never cached for visitors and a cached plain rendering is never shown instead. Root.fusion adds the element marker to `Neos.Neos:ContentComponent` and `Neos.Neos:Content` only for this route and keeps the Neos.Ui editing scripts out of it. Content rendered without these prototypes carries no marker and is reported as not found on the page.
+
 ### Keyboard review
 
 Press **?** anywhere in the module, or use the button at the bottom of the sidebar, for an overview of all shortcuts. Shortcuts apply while nothing or a page, change or sidebar entry has focus; they stay off inside form controls and buttons, and modifier combinations are left to the browser.
@@ -70,8 +81,9 @@ Press **?** anywhere in the module, or use the button at the bottom of the sideb
 | **↓ / J**, **↑ / K** | next / previous page |
 | **Home / End** | first / last page |
 | **Enter** | focus the page in the review stream (from the sidebar) |
-| **]** / **[** | next / previous change on the page; **[** on the first change returns to the page heading |
+| **]** / **[** | next / previous change on the page; **[** on the first change returns to the page heading. In the visual compare the keys walk the markers on the page. |
 | **V** | mark the page as reviewed / not reviewed |
+| **D** | switch between change list and visual compare |
 | **Esc** | from a change back to the page heading, from the page back to its sidebar entry, or close the overlay |
 
 Without a focused element the keys act on the page currently shown at the top of the stream.

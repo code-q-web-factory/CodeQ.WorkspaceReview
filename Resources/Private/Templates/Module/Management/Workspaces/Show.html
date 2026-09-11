@@ -13,7 +13,7 @@
 				<f:form.hidden name="selectedWorkspace" value="{selectedWorkspace}"/>
 				<legend>{neos:backend.translate(id: 'workspaces.unpublishedChanges', source: 'Modules', package: 'Neos.Neos', arguments: {0: selectedWorkspaceLabel})}</legend>
 				<br />
-				<div class="codeq-review-layout" data-review-navigation data-review-workspace="{selectedWorkspace.name}">
+				<div class="codeq-review-layout" data-review-navigation data-review-workspace="{selectedWorkspace.name}" data-label-loading="{neos:backend.translate(id: 'visual.loading', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-unavailable="{neos:backend.translate(id: 'visual.unavailable', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-new-page="{neos:backend.translate(id: 'visual.newPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-removed-page="{neos:backend.translate(id: 'visual.removedPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-unplaced="{neos:backend.translate(id: 'visual.unplaced', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-unlocated="{neos:backend.translate(id: 'visual.unlocated', source: 'Main', package: 'CodeQ.WorkspaceReview')}" data-label-show-in-list="{neos:backend.translate(id: 'visual.showInList', source: 'Main', package: 'CodeQ.WorkspaceReview')}">
 					<nav class="codeq-review-sidebar" aria-labelledby="codeq-review-pages-title" aria-describedby="codeq-review-navigation-help">
 						<div class="codeq-review-sidebar__header">
 							<h2 id="codeq-review-pages-title">{neos:backend.translate(id: 'navigation.pages', source: 'Main', package: 'CodeQ.WorkspaceReview')}</h2>
@@ -63,8 +63,25 @@
 									<input type="checkbox" id="check-all" /><span></span>
 								</label>
 							</th>
-							<th><label for="check-all">{neos:backend.translate(id: 'workspaces.selectAllCurrentChanges', source: 'Modules', package: 'Neos.Neos')}</label></th>
+							<th>
+								<div class="codeq-review-toolbar__row">
+									<label for="check-all">{neos:backend.translate(id: 'workspaces.selectAllCurrentChanges', source: 'Modules', package: 'Neos.Neos')}</label>
+									<div class="codeq-review-modes" role="group" aria-label="{neos:backend.translate(id: 'mode.label', source: 'Main', package: 'CodeQ.WorkspaceReview')}">
+										<button type="button" class="codeq-review-modes__button" data-review-mode="unified" aria-pressed="true" title="{neos:backend.translate(id: 'mode.unifiedHelp', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-list-ul" aria-hidden="true"></i> {neos:backend.translate(id: 'mode.unified', source: 'Main', package: 'CodeQ.WorkspaceReview')}</button>
+										<button type="button" class="codeq-review-modes__button" data-review-mode="visual" aria-pressed="false" title="{neos:backend.translate(id: 'mode.visualHelp', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-eye" aria-hidden="true"></i> {neos:backend.translate(id: 'mode.visual', source: 'Main', package: 'CodeQ.WorkspaceReview')}</button>
+									</div>
+								</div>
+							</th>
 							<th class="neos-action"></th>
+						</tr>
+						<tr class="codeq-review-legend" data-review-legend hidden>
+							<th colspan="3">
+								<span class="codeq-review-legend__item"><i class="codeq-review-legend__swatch codeq-review-legend__swatch--created" aria-hidden="true"></i><span data-review-legend-status="created">{neos:backend.translate(id: 'status.created', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
+								<span class="codeq-review-legend__item"><i class="codeq-review-legend__swatch codeq-review-legend__swatch--edited" aria-hidden="true"></i><span data-review-legend-status="edited">{neos:backend.translate(id: 'status.edited', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
+								<span class="codeq-review-legend__item"><i class="codeq-review-legend__swatch codeq-review-legend__swatch--moved" aria-hidden="true"></i><span data-review-legend-status="moved">{neos:backend.translate(id: 'status.moved', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
+								<span class="codeq-review-legend__item"><i class="codeq-review-legend__swatch codeq-review-legend__swatch--hidden" aria-hidden="true"></i><span data-review-legend-status="hidden">{neos:backend.translate(id: 'status.hidden', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
+								<span class="codeq-review-legend__item"><i class="codeq-review-legend__swatch codeq-review-legend__swatch--deleted" aria-hidden="true"></i><span data-review-legend-status="deleted">{neos:backend.translate(id: 'status.deleted', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
+							</th>
 						</tr>
 						</thead>
 						<f:for each="{siteChanges}" as="site">
@@ -103,8 +120,15 @@
 											<i class="fold-toggle fas fa-chevron-up icon-white" data-toggle="fold-{document.documentNode.identifier}-{dimension}"></i>
 										</td>
 									</tr>
+									<tr class="codeq-review-visual" data-review-visual data-review-preview="{document.previewUri}" data-review-live-preview="{document.livePreviewUri}" data-review-document-new="{f:if(condition: document.isNew, then: 'true', else: 'false')}" data-review-document-removed="{f:if(condition: document.documentNode.removed, then: 'true', else: 'false')}" hidden>
+										<td colspan="3" class="codeq-review-visual__cell">
+											<div class="codeq-review-visual__frame">
+												<p class="codeq-review-visual__status" data-review-visual-status>{neos:backend.translate(id: 'visual.loading', source: 'Main', package: 'CodeQ.WorkspaceReview')}</p>
+											</div>
+										</td>
+									</tr>
 									<f:for each="{document.changes}" key="relativePath" as="change">
-										<tr tabindex="-1" class="neos-change fold-{document.documentNode.identifier}-{dimension} document-{document.documentNode.identifier}" data-nodepath="{change.node.path}" data-review-modified="{change.node.lastModificationDateTime -> f:format.date(format: 'U')}" data-ismoved="{f:if(condition: change.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: change.isNew, then: 'true', else: 'false')}">
+										<tr tabindex="-1" class="neos-change fold-{document.documentNode.identifier}-{dimension} document-{document.documentNode.identifier}" data-review-node="{change.node.identifier}" data-nodepath="{change.node.path}" data-review-modified="{change.node.lastModificationDateTime -> f:format.date(format: 'U')}" data-ismoved="{f:if(condition: change.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: change.isNew, then: 'true', else: 'false')}">
 											<td class="check neos-priority1">
 												<label for="{change.node.identifier}-{dimension}" class="neos-checkbox"><f:form.checkbox name="nodes[]" value="{change.node.contextPath}" id="{change.node.identifier}-{dimension}" /><span></span></label>
 											</td>
@@ -208,6 +232,7 @@
 							<dt><kbd>Esc</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.backToPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
 							<dt class="codeq-review-shortcuts__heading">{neos:backend.translate(id: 'shortcuts.groupReview', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dt>
 							<dt><kbd>V</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.toggleReviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>D</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.toggleMode', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
 							<dt><kbd>?</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.help', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
 						</dl>
 					</div>
@@ -262,11 +287,6 @@
 								jQuery('.batch-action').addClass('neos-hidden').addClass('neos-disabled').attr('disabled', 'disabled');
 								jQuery('.review-button-action').removeClass('neos-hidden').removeClass('neos-disabled').removeAttr('disabled', 'disabled');
 							}
-						});
-
-						jQuery('.fold-toggle').click(function() {
-							jQuery(this).toggleClass('fas fa-chevron-down fas fa-chevron-up');
-							jQuery('tr.' + jQuery(this).data('toggle')).toggle();
 						});
 					});
 				});

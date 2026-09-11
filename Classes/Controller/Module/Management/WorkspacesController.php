@@ -14,6 +14,7 @@ use Neos\ContentRepository\Domain\Model\NodeType;
 use Neos\ContentRepository\Domain\Model\Workspace;
 use Neos\Diff\SequenceMatcher;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Mvc\Routing\UriBuilder;
 use Neos\Flow\I18n\EelHelper\TranslationHelper;
 use Neos\Flow\I18n\Locale;
 use Neos\Flow\Mvc\View\ViewInterface;
@@ -161,9 +162,9 @@ class WorkspacesController extends NeosWorkspacesController
     }
 
     /**
-     * Adds a "pages" list per dimension on top of the site changes computed
-     * by the core controller, ordering the changed documents like the page
-     * tree.
+     * Adds, on top of the site changes computed by the core controller, the
+     * URIs the visual compare renders each document from and a "pages" list
+     * per dimension that orders the changed documents like the page tree.
      *
      * @param Workspace $selectedWorkspace
      * @return array
@@ -173,10 +174,45 @@ class WorkspacesController extends NeosWorkspacesController
         $siteChanges = parent::computeSiteChanges($selectedWorkspace);
         foreach ($siteChanges as $siteKey => $site) {
             foreach ($site['documents'] as $dimension => $documents) {
+                foreach ($documents as $documentPath => $document) {
+                    $documents[$documentPath] = $this->addPreviewUris($document);
+                }
+                $siteChanges[$siteKey]['documents'][$dimension] = $documents;
                 $siteChanges[$siteKey]['pages'][$dimension] = $this->computePageTree($documents);
             }
         }
         return $siteChanges;
+    }
+
+    /**
+     * The visual compare renders the document twice through the package's
+     * PreviewController: as it stands in the reviewed workspace and as it is
+     * published. A deleted document has no workspace rendering, a new one no
+     * live rendering; those URIs stay null.
+     */
+    protected function addPreviewUris(array $document): array
+    {
+        /** @var NodeInterface $documentNode */
+        $documentNode = $document['documentNode'];
+        $contextPath = $documentNode->getContextPath();
+        $document['previewUri'] = $documentNode->isRemoved() ? null : $this->buildPreviewUri($contextPath);
+        $document['livePreviewUri'] = ($document['isNew'] ?? false)
+            ? null
+            : $this->buildPreviewUri(preg_replace('/@[^;]*/', '@live', $contextPath, 1));
+        return $document;
+    }
+
+    /**
+     * Module templates build URIs for the module's own sub-request, so the
+     * preview URI is built against the main request instead.
+     */
+    protected function buildPreviewUri(string $contextPath): string
+    {
+        $uriBuilder = new UriBuilder();
+        $uriBuilder->setRequest($this->request->getMainRequest());
+        return $uriBuilder->reset()
+            ->setCreateAbsoluteUri(false)
+            ->uriFor('show', ['node' => $contextPath], 'Preview', 'CodeQ.WorkspaceReview');
     }
 
     /**
@@ -581,12 +617,19 @@ class WorkspacesController extends NeosWorkspacesController
         }
 
         $entries = [];
-        $diffHtml = $this->renderTextDiff((string)($originalValue ?? ''), $isRemoved ? '' : (string)($changedValue ?? ''));
+        $originalText = (string)($originalValue ?? '');
+        $changedText = $isRemoved ? '' : (string)($changedValue ?? '');
+        $diffHtml = $this->renderTextDiff($originalText, $changedText);
         if ($diffHtml !== null) {
             $entries[] = [
                 'type' => 'text',
                 'propertyLabel' => $propertyLabel,
                 'diffHtml' => $diffHtml,
+                // The visual compare shows the diff in place of the text on
+                // the rendered page, where nothing may be left out, and finds
+                // that place by the plain wording of the new text.
+                'diffHtmlFull' => $this->renderTextDiff($originalText, $changedText, false),
+                'changedText' => implode(' ', $this->tokenizeText($changedText)),
             ];
         }
         if (is_string($originalValue) && is_string($changedValue) && !$isRemoved) {
@@ -783,10 +826,11 @@ class WorkspacesController extends NeosWorkspacesController
 
     /**
      * Word-level inline diff as safe HTML with <ins>/<del> markers. Long
-     * unchanged runs are collapsed with an ellipsis. Returns null when both
-     * sides are textually identical after normalization.
+     * unchanged and long edited runs are collapsed with an ellipsis unless
+     * $collapse is false. Returns null when both sides are textually
+     * identical after normalization.
      */
-    protected function renderTextDiff(string $original, string $changed): ?string
+    protected function renderTextDiff(string $original, string $changed, bool $collapse = true): ?string
     {
         $originalWords = $this->tokenizeText($original);
         $changedWords = $this->tokenizeText($changed);
@@ -800,17 +844,17 @@ class WorkspacesController extends NeosWorkspacesController
             switch ($tag) {
                 case 'equal':
                     $words = array_slice($originalWords, $i1, $i2 - $i1);
-                    $html[] = $this->renderContextWords($words, $i1 === 0, $i2 === count($originalWords));
+                    $html[] = $this->renderContextWords($words, $i1 === 0, $i2 === count($originalWords), $collapse);
                     break;
                 case 'delete':
-                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1));
+                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1), $collapse);
                     break;
                 case 'insert':
-                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1));
+                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1), $collapse);
                     break;
                 case 'replace':
-                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1));
-                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1));
+                    $html[] = $this->renderEditedRun('del', array_slice($originalWords, $i1, $i2 - $i1), $collapse);
+                    $html[] = $this->renderEditedRun('ins', array_slice($changedWords, $j1, $j2 - $j1), $collapse);
                     break;
             }
         }
@@ -822,10 +866,10 @@ class WorkspacesController extends NeosWorkspacesController
      * surrounding edits when the run is long. Runs at the very start or end
      * of the text only need context on their edit-facing side.
      */
-    protected function renderContextWords(array $words, bool $isStart, bool $isEnd): string
+    protected function renderContextWords(array $words, bool $isStart, bool $isEnd, bool $collapse = true): string
     {
         $ellipsis = '<span class="codeq-review-ellipsis">…</span>';
-        if (count($words) <= self::CONTEXT_COLLAPSE_THRESHOLD) {
+        if (!$collapse || count($words) <= self::CONTEXT_COLLAPSE_THRESHOLD) {
             return $this->escapeWords($words);
         }
         if ($isStart && $isEnd) {
@@ -857,12 +901,12 @@ class WorkspacesController extends NeosWorkspacesController
      * @param string $tagName either "ins" or "del"
      * @param string[] $words
      */
-    protected function renderEditedRun(string $tagName, array $words): string
+    protected function renderEditedRun(string $tagName, array $words, bool $collapse = true): string
     {
         $label = $this->translateOwn($tagName === 'del' ? 'diff.deleted' : 'diff.added');
         return '<' . $tagName . '>'
             . '<span class="codeq-review-sr-only">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ' </span>'
-            . $this->renderEditedWords($words)
+            . $this->renderEditedWords($words, $collapse)
             . '</' . $tagName . '>';
     }
 
@@ -871,10 +915,10 @@ class WorkspacesController extends NeosWorkspacesController
      * text of a newly created element) are shortened in the middle, so a
      * single change cannot dominate the whole review page.
      */
-    protected function renderEditedWords(array $words): string
+    protected function renderEditedWords(array $words, bool $collapse = true): string
     {
         $limit = self::EDITED_RUN_COLLAPSE_THRESHOLD;
-        if (count($words) <= $limit) {
+        if (!$collapse || count($words) <= $limit) {
             return $this->escapeWords($words);
         }
         $kept = (int)floor($limit / 2);
