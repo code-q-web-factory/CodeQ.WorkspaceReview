@@ -6,10 +6,6 @@
                 <source>Changed pages</source>
                 <target>Geänderte Seiten</target>
             </trans-unit>
-            <trans-unit id="navigation.help.move" xml:space="preserve">
-                <source>previous / next page</source>
-                <target>Seite wechseln</target>
-            </trans-unit>
             <trans-unit id="navigation.help.review" xml:space="preserve">
                 <source>review page</source>
                 <target>Seite prüfen</target>
@@ -21,6 +17,75 @@
             <trans-unit id="navigation.unchangedPage" xml:space="preserve">
                 <source>Unchanged page with changed subpages</source>
                 <target>Unveränderte Seite mit geänderten Unterseiten</target>
+            </trans-unit>
+
+            <trans-unit id="review.reviewed" xml:space="preserve">
+                <source>Reviewed</source>
+                <target>Geprüft</target>
+            </trans-unit>
+            <trans-unit id="review.markReviewed" xml:space="preserve">
+                <source>Mark page as reviewed and collapse it</source>
+                <target>Seite als geprüft markieren und einklappen</target>
+            </trans-unit>
+            <trans-unit id="review.changedSinceReview" xml:space="preserve">
+                <source>Changed since your review</source>
+                <target>Seit der Prüfung geändert</target>
+            </trans-unit>
+            <trans-unit id="review.changedSinceReviewHelp" xml:space="preserve">
+                <source>This page was edited again after you marked it as reviewed. The reviewed mark was therefore removed, so please look through its changes once more.</source>
+                <target>Diese Seite wurde nach der Markierung als geprüft erneut bearbeitet. Die Markierung wurde deshalb entfernt – bitte die Änderungen noch einmal durchsehen.</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.title" xml:space="preserve">
+                <source>Keyboard shortcuts</source>
+                <target>Tastaturkürzel</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.close" xml:space="preserve">
+                <source>Close</source>
+                <target>Schließen</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupPages" xml:space="preserve">
+                <source>Pages</source>
+                <target>Seiten</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.nextPage" xml:space="preserve">
+                <source>next page</source>
+                <target>nächste Seite</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.previousPage" xml:space="preserve">
+                <source>previous page</source>
+                <target>vorherige Seite</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.firstLastPage" xml:space="preserve">
+                <source>first / last page</source>
+                <target>erste / letzte Seite</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupChanges" xml:space="preserve">
+                <source>Changes</source>
+                <target>Änderungen</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.nextChange" xml:space="preserve">
+                <source>next change on the page</source>
+                <target>nächste Änderung der Seite</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.previousChange" xml:space="preserve">
+                <source>previous change on the page</source>
+                <target>vorherige Änderung der Seite</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.backToPage" xml:space="preserve">
+                <source>back to the page heading</source>
+                <target>zurück zur Seitenüberschrift</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupReview" xml:space="preserve">
+                <source>Review</source>
+                <target>Prüfung</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.toggleReviewed" xml:space="preserve">
+                <source>mark the page as reviewed / not reviewed</source>
+                <target>Seite als geprüft / ungeprüft markieren</target>
+            </trans-unit>
+            <trans-unit id="shortcuts.help" xml:space="preserve">
+                <source>show this overview</source>
+                <target>diese Übersicht anzeigen</target>
             </trans-unit>
 
             <trans-unit id="status.created" xml:space="preserve">

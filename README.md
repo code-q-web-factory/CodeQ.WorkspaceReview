@@ -13,6 +13,8 @@ The package changes only the controller and review rendering. Publishing, discar
 
 ## Improvements at a glance
 
+- **Track review progress.** Mark a page as reviewed to collapse it; the sidebar counts reviewed pages and remembers them per workspace, and flags a page that changed after it was reviewed.
+- **Review from the keyboard.** J/K, [ / ], V and Enter move through pages and changes and mark them reviewed; **?** opens the shortcut overview.
 - **Jump between changed pages.** A sticky left sidebar lists the changed pages as a tree styled like the backend page tree, with their content dimension. The current page stays highlighted as you scroll, and each page is a separate block in the review.
 
 - **Configurations become visible.** Select boxes, toggles and references use translated editor labels instead of raw stored values.
@@ -54,7 +56,26 @@ The card header names the element type next to the node label, because the label
 
 The sidebar shows the changed pages in the order and nesting of the page tree, with the node type icons, indentation and colours of the backend page tree; changed pages carry its orange "unpublished changes" edge. An unchanged page between the site and a changed subpage is listed greyed and without a link, so the structure stays readable. Click a page to jump to its changes, or scroll the review normally with the mouse wheel. The sidebar follows the current page without moving keyboard focus. On smaller screens the index appears above the review.
 
-Tab into the sidebar, then use **↑ / ↓** or **J / K** to jump between pages and **Home / End** for the first or last page. **Enter** focuses the page in the review stream; the same navigation keys work there, and **Escape** returns to its sidebar entry. Tab continues into the page’s existing controls. Shortcuts apply only while a page heading or sidebar link has focus, so they do not interfere with forms or browser shortcuts.
+### Reviewed pages and progress
+
+Every page header has a **Reviewed** toggle. Marking a page collapses its changes, greys its title, shows a green check in the sidebar and advances the progress bar in the sidebar header ("2/7 reviewed"). The chevron still expands a reviewed page for a second look without clearing the mark.
+
+Reviewed marks are stored in the browser per workspace, together with a signature of the page's changes (which nodes, last modified when). When a page is edited after it was reviewed, the mark is dropped on the next load and the page carries a **"Changed since your review"** badge; hovering or focusing the badge explains what happened. So nothing slips through unnoticed. The marks are a reviewer's own progress note; publishing and discarding ignore them.
+
+### Keyboard review
+
+Press **?** anywhere in the module, or use the button at the bottom of the sidebar, for an overview of all shortcuts. Shortcuts apply while nothing or a page, change or sidebar entry has focus; they stay off inside form controls and buttons, and modifier combinations are left to the browser.
+
+| Keys | Action |
+| --- | --- |
+| **↓ / J**, **↑ / K** | next / previous page |
+| **Home / End** | first / last page |
+| **Enter** | focus the page in the review stream (from the sidebar) |
+| **]** / **[** | next / previous change on the page; **[** on the first change returns to the page heading |
+| **V** | mark the page as reviewed / not reviewed |
+| **Esc** | from a change back to the page heading, from the page back to its sidebar entry, or close the overlay |
+
+Without a focused element the keys act on the page currently shown at the top of the stream.
 
 Each content-dimension variant has its own destination. Links also work as ordinary anchors when JavaScript is disabled.
 

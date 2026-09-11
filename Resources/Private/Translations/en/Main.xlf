@@ -5,9 +5,6 @@
             <trans-unit id="navigation.pages" xml:space="preserve">
                 <source>Changed pages</source>
             </trans-unit>
-            <trans-unit id="navigation.help.move" xml:space="preserve">
-                <source>previous / next page</source>
-            </trans-unit>
             <trans-unit id="navigation.help.review" xml:space="preserve">
                 <source>review page</source>
             </trans-unit>
@@ -16,6 +13,58 @@
             </trans-unit>
             <trans-unit id="navigation.unchangedPage" xml:space="preserve">
                 <source>Unchanged page with changed subpages</source>
+            </trans-unit>
+
+            <trans-unit id="review.reviewed" xml:space="preserve">
+                <source>Reviewed</source>
+            </trans-unit>
+            <trans-unit id="review.markReviewed" xml:space="preserve">
+                <source>Mark page as reviewed and collapse it</source>
+            </trans-unit>
+            <trans-unit id="review.changedSinceReview" xml:space="preserve">
+                <source>Changed since your review</source>
+            </trans-unit>
+            <trans-unit id="review.changedSinceReviewHelp" xml:space="preserve">
+                <source>This page was edited again after you marked it as reviewed. The reviewed mark was therefore removed, so please look through its changes once more.</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.title" xml:space="preserve">
+                <source>Keyboard shortcuts</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.close" xml:space="preserve">
+                <source>Close</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupPages" xml:space="preserve">
+                <source>Pages</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.nextPage" xml:space="preserve">
+                <source>next page</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.previousPage" xml:space="preserve">
+                <source>previous page</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.firstLastPage" xml:space="preserve">
+                <source>first / last page</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupChanges" xml:space="preserve">
+                <source>Changes</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.nextChange" xml:space="preserve">
+                <source>next change on the page</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.previousChange" xml:space="preserve">
+                <source>previous change on the page</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.backToPage" xml:space="preserve">
+                <source>back to the page heading</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.groupReview" xml:space="preserve">
+                <source>Review</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.toggleReviewed" xml:space="preserve">
+                <source>mark the page as reviewed / not reviewed</source>
+            </trans-unit>
+            <trans-unit id="shortcuts.help" xml:space="preserve">
+                <source>show this overview</source>
             </trans-unit>
 
             <trans-unit id="status.created" xml:space="preserve">

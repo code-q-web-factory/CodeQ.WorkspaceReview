@@ -320,16 +320,56 @@
     color: #fff;
 }
 
-.neos.neos-module .codeq-review-sidebar h2 {
-    margin: 0;
+.codeq-review-sidebar__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
     padding: 12px 16px;
     border-bottom: 1px solid #3f3f3f;
+}
+
+.neos.neos-module .codeq-review-sidebar h2 {
+    margin: 0;
+    padding: 0;
     font-size: 11px;
     line-height: 16px;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #adadad;
+}
+
+/* review progress ---------------------------------------------------------- */
+
+.codeq-review-progress__count {
+    flex: 0 0 auto;
+    font-size: 11px;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+    color: #adadad;
+}
+
+.codeq-review-progress__count[hidden],
+.codeq-review-progress[hidden] {
+    display: none;
+}
+
+.codeq-review-sidebar--complete .codeq-review-progress__count {
+    color: #00a338;
+}
+
+.codeq-review-progress {
+    flex: 0 0 auto;
+    height: 3px;
+    background: #141414;
+}
+
+.codeq-review-progress__bar {
+    width: 0;
+    height: 100%;
+    background: #00a338;
+    transition: width 0.2s ease-out;
 }
 
 .neos.neos-module .codeq-review-sidebar__list {
@@ -425,6 +465,35 @@
     text-overflow: ellipsis;
 }
 
+/* A reviewed page reads as done: muted label, check mark at the row end. */
+.codeq-review-sidebar__state {
+    flex: 0 0 auto;
+    display: none;
+    width: 18px;
+    margin-left: 6px;
+    font-size: 11px;
+    text-align: center;
+    color: #00a338;
+}
+
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed] .codeq-review-sidebar__state {
+    display: inline-block;
+}
+
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed] .codeq-review-sidebar__label,
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed] .codeq-review-sidebar__icon {
+    color: #8c8c8c;
+}
+
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed] {
+    border-left-color: #00a338;
+}
+
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed]:hover .codeq-review-sidebar__label,
+.neos.neos-module .codeq-review-sidebar__link[data-reviewed][aria-current] .codeq-review-sidebar__label {
+    color: #00adee;
+}
+
 .codeq-review-sidebar__dimensions {
     flex: 0 0 auto;
     margin-left: auto;
@@ -447,30 +516,45 @@
 }
 
 .neos.neos-module .codeq-review-sidebar__help {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 12px;
     margin: 0;
-    padding: 10px 16px;
+    padding: 6px 8px;
     border-top: 1px solid #3f3f3f;
     font-size: 11px;
     line-height: 16px;
+}
+
+.neos.neos-module .codeq-review-sidebar__shortcuts {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 4px 8px;
+    border: 0;
+    background: none;
+    font: inherit;
     color: #8c8c8c;
+    cursor: pointer;
 }
 
-.codeq-review-sidebar__key {
-    white-space: nowrap;
+.neos.neos-module .codeq-review-sidebar__shortcuts:hover,
+.neos.neos-module .codeq-review-sidebar__shortcuts:focus-visible {
+    color: #fff;
+    outline: none;
 }
 
-.codeq-review-sidebar__help kbd {
+.neos.neos-module .codeq-review-sidebar__shortcuts:focus-visible kbd {
+    border-color: #00b5ff;
+}
+
+.codeq-review-sidebar kbd,
+.codeq-review-shortcuts kbd {
     display: inline-block;
     min-width: 12px;
-    margin-right: 2px;
-    padding: 0 4px;
+    padding: 0 5px;
     border: 1px solid #5b5b5b;
     border-radius: 3px;
     background: #141414;
-    font: 10px/14px "Noto Sans", sans-serif;
+    font: 11px/18px "Noto Sans", sans-serif;
     text-align: center;
     color: #fff;
 }
@@ -607,6 +691,97 @@
     gap: 4px;
 }
 
+/* "Reviewed" toggle: grey until pressed, then the Neos success green. */
+.neos.neos-module .codeq-review-reviewed {
+    padding: 0 12px;
+    font-size: 13px;
+}
+
+.neos.neos-module .codeq-review-reviewed i {
+    margin-right: 4px;
+    opacity: 0.6;
+}
+
+.neos.neos-module .codeq-review-reviewed[aria-pressed="true"] {
+    background: #00a338;
+}
+
+.neos.neos-module .codeq-review-reviewed[aria-pressed="true"] i {
+    opacity: 1;
+}
+
+.neos.neos-module .codeq-review-reviewed:hover {
+    background: #5b5b5b;
+}
+
+.neos.neos-module .codeq-review-reviewed[aria-pressed="true"]:hover {
+    background: #00b53e;
+}
+
+.neos.neos-module .codeq-review-page--reviewed .codeq-review-page__title,
+.neos.neos-module .codeq-review-page--reviewed .codeq-review-summary {
+    color: #adadad;
+}
+
+/* Sits in a 20px title line; inline-block centres the badge box on the line
+   instead of hanging it from the baseline. */
+.codeq-review-badge--stale {
+    display: inline-block;
+    vertical-align: middle;
+    margin: -2px 0 0 6px;
+    padding: 1px 8px 1px 7px;
+    background: #ff8700;
+    color: #141414;
+    cursor: help;
+}
+
+.codeq-review-badge--stale i {
+    margin-right: 3px;
+    font-size: 11px;
+}
+
+.codeq-review-badge--stale:focus-visible {
+    outline: 2px solid #00b5ff;
+    outline-offset: 1px;
+}
+
+/* The explanation opens below the badge on hover and on keyboard focus. The
+   module ships no tooltip script, so a native title would only show on hover. */
+.codeq-review-badge--stale {
+    position: relative;
+}
+
+.codeq-review-badge--stale::after {
+    content: attr(data-review-help);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 20;
+    display: none;
+    width: 320px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #3f3f3f;
+    border-radius: 2px;
+    background: #141414;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 18px;
+    letter-spacing: normal;
+    white-space: normal;
+    color: #fff;
+}
+
+.codeq-review-badge--stale:hover::after,
+.codeq-review-badge--stale:focus-visible::after {
+    display: block;
+}
+
+.codeq-review-badge--stale[hidden] {
+    display: none;
+}
+
 .neos.neos-module .codeq-review-page__actions .neos-button {
     margin: 0;
 }
@@ -646,8 +821,13 @@
     max-width: 100%;
 }
 
+.codeq-review-table .neos-change {
+    scroll-margin-top: 56px;
+}
+
 .codeq-review-sidebar__link:focus-visible,
-.codeq-review-table .neos-document:focus-visible {
+.codeq-review-table .neos-document:focus-visible,
+.codeq-review-table .neos-change:focus-visible {
     outline: 2px solid #00b5ff;
     outline-offset: -2px;
 }
@@ -680,6 +860,115 @@
     margin: 0;
 }
 
+/* keyboard shortcuts overlay ---------------------------------------------- */
+
+.codeq-review-shortcuts {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.codeq-review-shortcuts[hidden] {
+    display: none;
+}
+
+.codeq-review-shortcuts__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.codeq-review-shortcuts__dialog {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    max-height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+    border: 1px solid #3f3f3f;
+    background: #222;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    outline: none;
+}
+
+.codeq-review-shortcuts__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 12px 12px 20px;
+    border-bottom: 1px solid #3f3f3f;
+}
+
+.neos.neos-module .codeq-review-shortcuts h3 {
+    margin: 0;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.neos.neos-module .codeq-review-shortcuts h3 i {
+    margin-right: 8px;
+    color: #adadad;
+}
+
+.neos.neos-module .codeq-review-shortcuts__close {
+    margin: 0;
+    padding: 0 12px;
+}
+
+.codeq-review-shortcuts__columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 32px;
+    padding: 16px 20px 20px;
+}
+
+.neos.neos-module .codeq-review-shortcuts__group {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 8px 14px;
+    align-items: baseline;
+    margin: 0;
+}
+
+.neos.neos-module .codeq-review-shortcuts__group dt,
+.neos.neos-module .codeq-review-shortcuts__group dd {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.neos.neos-module .codeq-review-shortcuts__group dt {
+    white-space: nowrap;
+}
+
+.neos.neos-module .codeq-review-shortcuts__group dd {
+    color: #adadad;
+}
+
+.neos.neos-module .codeq-review-shortcuts__heading {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8c8c8c;
+}
+
+.neos.neos-module .codeq-review-shortcuts__heading:first-child {
+    margin-top: 0;
+}
+
 /* narrow screens ---------------------------------------------------------- */
 
 @media (max-width: 900px) {
@@ -691,6 +980,10 @@
     .codeq-review-sidebar {
         position: static;
         max-height: 280px;
+    }
+
+    .codeq-review-shortcuts__columns {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

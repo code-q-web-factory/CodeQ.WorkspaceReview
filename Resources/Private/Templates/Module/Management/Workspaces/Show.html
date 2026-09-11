@@ -13,9 +13,13 @@
 				<f:form.hidden name="selectedWorkspace" value="{selectedWorkspace}"/>
 				<legend>{neos:backend.translate(id: 'workspaces.unpublishedChanges', source: 'Modules', package: 'Neos.Neos', arguments: {0: selectedWorkspaceLabel})}</legend>
 				<br />
-				<div class="codeq-review-layout" data-review-navigation>
+				<div class="codeq-review-layout" data-review-navigation data-review-workspace="{selectedWorkspace.name}">
 					<nav class="codeq-review-sidebar" aria-labelledby="codeq-review-pages-title" aria-describedby="codeq-review-navigation-help">
-						<h2 id="codeq-review-pages-title">{neos:backend.translate(id: 'navigation.pages', source: 'Main', package: 'CodeQ.WorkspaceReview')}</h2>
+						<div class="codeq-review-sidebar__header">
+							<h2 id="codeq-review-pages-title">{neos:backend.translate(id: 'navigation.pages', source: 'Main', package: 'CodeQ.WorkspaceReview')}</h2>
+							<span class="codeq-review-progress__count" data-review-progress-count hidden><span data-review-progress-reviewed>0</span>/<span data-review-progress-total>0</span> {neos:backend.translate(id: 'review.reviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+						</div>
+						<div class="codeq-review-progress" role="progressbar" aria-labelledby="codeq-review-pages-title" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" data-review-progress hidden><div class="codeq-review-progress__bar" data-review-progress-bar></div></div>
 						<ul class="codeq-review-sidebar__list">
 							<f:for each="{siteChanges}" as="site">
 								<f:for each="{site.pages}" key="dimension" as="pages">
@@ -32,6 +36,7 @@
 														<f:if condition="{contentDimensions}">
 															<span class="codeq-review-sidebar__dimensions"><f:render partial="Module/Shared/NodeContentDimensionsInformation" arguments="{contentDimensions: contentDimensions, node: page.node}" /></span>
 														</f:if>
+														<span class="codeq-review-sidebar__state" title="{neos:backend.translate(id: 'review.reviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-check" aria-hidden="true"></i><span class="codeq-review-sr-only">{neos:backend.translate(id: 'review.reviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span>
 													</a>
 												</f:then>
 												<f:else>
@@ -46,9 +51,7 @@
 							</f:for>
 						</ul>
 						<p id="codeq-review-navigation-help" class="codeq-review-sidebar__help">
-							<span class="codeq-review-sidebar__key"><kbd>↑</kbd><kbd>↓</kbd> {neos:backend.translate(id: 'navigation.help.move', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
-							<span class="codeq-review-sidebar__key"><kbd>↵</kbd> {neos:backend.translate(id: 'navigation.help.review', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
-							<span class="codeq-review-sidebar__key"><kbd>Esc</kbd> {neos:backend.translate(id: 'navigation.help.back', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+							<button type="button" class="codeq-review-sidebar__shortcuts" data-review-shortcuts-open aria-haspopup="dialog"><kbd>?</kbd> {neos:backend.translate(id: 'shortcuts.title', source: 'Main', package: 'CodeQ.WorkspaceReview')}</button>
 						</p>
 					</nav>
 					<div class="codeq-review-stream">
@@ -77,7 +80,7 @@
 										<td class="neos-priority1 path-caption">
 										<div class="codeq-review-page__caption">
 											<div class="codeq-review-page__text">
-												<div class="codeq-review-page__title"><review:cleanLabel value="{document.documentNode.label}" /></div>
+												<div class="codeq-review-page__title"><review:cleanLabel value="{document.documentNode.label}" /> <span class="codeq-review-badge codeq-review-badge--stale" data-review-stale hidden tabindex="0" data-review-help="{neos:backend.translate(id: 'review.changedSinceReviewHelp', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-question-circle" aria-hidden="true"></i> {neos:backend.translate(id: 'review.changedSinceReview', source: 'Main', package: 'CodeQ.WorkspaceReview')}<span class="codeq-review-sr-only">. {neos:backend.translate(id: 'review.changedSinceReviewHelp', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></span></div>
 												<div class="codeq-review-page__path">
 													<f:render partial="Module/Shared/DocumentBreadcrumb" arguments="{node: document.documentNode, showIcon: true}"></f:render>
 													<f:if condition="{contentDimensions}">
@@ -90,6 +93,7 @@
 											</div>
 
 											<div class="codeq-review-page__actions">
+												<button type="button" class="neos-button codeq-review-reviewed" data-review-toggle aria-pressed="false" title="{neos:backend.translate(id: 'review.markReviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-check" aria-hidden="true"></i> {neos:backend.translate(id: 'review.reviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}</button>
 												<f:if condition="{document.documentNode.removed}">
 													<f:else>
 														<neos:link.node node="{document.documentNode}" absolute="1" target="neosPreview" class="neos-button" title="{neos:backend.translate(id: 'workspaces.openPageInWorkspace', source: 'Modules', package: 'Neos.Neos', value: 'Open page in \"{0}\" workspace', arguments: {0: selectedWorkspaceLabel})}" additionalAttributes="{data-neos-toggle: 'tooltip'}"><i class="fas fa-external-link-alt icon-white"></i></neos:link.node><button form="postHelper" formaction="{f:uri.action(action: 'rebaseAndRedirect', arguments: {targetNode: document.documentNode, targetWorkspace: selectedWorkspace})}" type="submit" class="neos-button" title="{neos:backend.translate(id: 'edit', source: 'Main', package: 'Neos.Neos', value: 'Edit')}" data-neos-toggle="tooltip"><i class="fas fa-pencil-alt icon-white"></i></button>
@@ -103,7 +107,7 @@
 										</td>
 									</tr>
 									<f:for each="{document.changes}" key="relativePath" as="change">
-										<tr class="neos-change fold-{document.documentNode.identifier}-{dimension} document-{document.documentNode.identifier}" data-nodepath="{change.node.path}" data-ismoved="{f:if(condition: change.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: change.isNew, then: 'true', else: 'false')}">
+										<tr tabindex="-1" class="neos-change fold-{document.documentNode.identifier}-{dimension} document-{document.documentNode.identifier}" data-nodepath="{change.node.path}" data-review-modified="{change.node.lastModificationDateTime -> f:format.date(format: 'U')}" data-ismoved="{f:if(condition: change.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: change.isNew, then: 'true', else: 'false')}">
 											<td class="check neos-priority1">
 												<label for="{change.node.identifier}-{dimension}" class="neos-checkbox"><f:form.checkbox name="nodes[]" value="{change.node.contextPath}" id="{change.node.identifier}-{dimension}" /><span></span></label>
 											</td>
@@ -182,6 +186,35 @@
 					</div>
 				</div>
 				<div class="neos-modal-backdrop neos-in"></div>
+			</div>
+
+			<div class="codeq-review-shortcuts" data-review-shortcuts hidden>
+				<div class="codeq-review-shortcuts__backdrop" data-review-shortcuts-close></div>
+				<div class="codeq-review-shortcuts__dialog" role="dialog" aria-modal="true" aria-labelledby="codeq-review-shortcuts-title" tabindex="-1">
+					<div class="codeq-review-shortcuts__header">
+						<h3 id="codeq-review-shortcuts-title"><i class="fas fa-keyboard" aria-hidden="true"></i> {neos:backend.translate(id: 'shortcuts.title', source: 'Main', package: 'CodeQ.WorkspaceReview')}</h3>
+						<button type="button" class="neos-button codeq-review-shortcuts__close" data-review-shortcuts-close title="{neos:backend.translate(id: 'shortcuts.close', source: 'Main', package: 'CodeQ.WorkspaceReview')}"><i class="fas fa-times" aria-hidden="true"></i><span class="codeq-review-sr-only">{neos:backend.translate(id: 'shortcuts.close', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span></button>
+					</div>
+					<div class="codeq-review-shortcuts__columns">
+						<dl class="codeq-review-shortcuts__group">
+							<dt class="codeq-review-shortcuts__heading">{neos:backend.translate(id: 'shortcuts.groupPages', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dt>
+							<dt><kbd>↓</kbd> <kbd>J</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.nextPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>↑</kbd> <kbd>K</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.previousPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>Home</kbd> <kbd>End</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.firstLastPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>↵</kbd></dt><dd>{neos:backend.translate(id: 'navigation.help.review', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>Esc</kbd></dt><dd>{neos:backend.translate(id: 'navigation.help.back', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+						</dl>
+						<dl class="codeq-review-shortcuts__group">
+							<dt class="codeq-review-shortcuts__heading">{neos:backend.translate(id: 'shortcuts.groupChanges', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dt>
+							<dt><kbd>]</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.nextChange', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>[</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.previousChange', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>Esc</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.backToPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt class="codeq-review-shortcuts__heading">{neos:backend.translate(id: 'shortcuts.groupReview', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dt>
+							<dt><kbd>V</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.toggleReviewed', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+							<dt><kbd>?</kbd></dt><dd>{neos:backend.translate(id: 'shortcuts.help', source: 'Main', package: 'CodeQ.WorkspaceReview')}</dd>
+						</dl>
+					</div>
+				</div>
 			</div>
 
 			<f:form action="index" id="postHelper" method="post"></f:form>
