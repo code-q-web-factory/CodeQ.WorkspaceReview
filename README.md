@@ -1,6 +1,6 @@
 # CodeQ.WorkspaceReview
 
-Understand exactly what will change before publishing a Neos workspace.
+## Understand exactly what will change before publishing a Neos workspace.
 
 CodeQ.WorkspaceReview groups unpublished changes by page, explains each edit in a readable change list and shows changes directly in the page layout. Reviewers can navigate the page tree, work through changes from the keyboard and keep track of which pages they have checked.
 
@@ -8,10 +8,9 @@ CodeQ.WorkspaceReview groups unpublished changes by page, explains each edit in 
 
 ![Visual compare of Herbstprogramm 2026 with page navigation, orange change markers, inline word differences and a deleted image marked in red](Documentation/workspace-review-visual.png)
 
-**Visual compare keeps the changes in context.** In the second screenshot, orange outlines identify edited text elements. The paragraph shows the start of ticket sales changing from 15 to 1 September and the ticket prices from 12 to 14 and 8 to 9 euros, with deleted words struck through and additions underlined. The red overlay marks an image that will be removed when published. Click an element's status label to open its detailed change card. The sidebar and **Reviewed** toggle remain available while reviewing the page.
-
 > This package is an experiment focused on exploring the workspace review UI.
 > It is not optimized for code quality or production readiness.
+> 
 
 The package extends the workspace review with navigation, local review progress and a dedicated visual preview. Publishing, discarding and the workspace module path keep their existing behavior. The preview requires backend access and checks read access to private workspaces.
 
@@ -27,6 +26,7 @@ The package extends the workspace review with navigation, local review progress 
 - **Status and position are instantly clear.** Created, deleted, moved and hidden elements receive explicit badges. Positions use readable sibling numbers instead of sorting indexes.
 - **Every change has an explanation.** Visibility changes, reverted edits and internal updates no longer produce unexplained empty rows.
 - **Links and formatting become visible.** Retargeted links, window behavior, linked text and formatting changes are detected even when the wording remains unchanged.
+- **Visual compare keeps the changes in context.** Text changes can be reviewed in a page preview, and created, edited and deleted nodes are highlighted (still experimental). Clicking the info button jumps into the compare list view for details
 
 ## Installation
 
