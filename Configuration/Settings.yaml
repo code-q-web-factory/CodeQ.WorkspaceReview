@@ -11,3 +11,5 @@ Neos:
             additionalResources:
               styleSheets:
                 - 'resource://CodeQ.WorkspaceReview/Public/Styles/WorkspaceReview.css'
+              javaScripts:
+                - 'resource://CodeQ.WorkspaceReview/Public/JavaScript/PageNavigation.js'

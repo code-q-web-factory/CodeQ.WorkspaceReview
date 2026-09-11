@@ -1,4 +1,5 @@
 {namespace neos=Neos\Neos\ViewHelpers}
+{namespace review=CodeQ\WorkspaceReview\ViewHelpers}
 <f:layout name="BackendSubModule" />
 
 <f:section name="subtitle">
@@ -12,38 +13,83 @@
 				<f:form.hidden name="selectedWorkspace" value="{selectedWorkspace}"/>
 				<legend>{neos:backend.translate(id: 'workspaces.unpublishedChanges', source: 'Modules', package: 'Neos.Neos', arguments: {0: selectedWorkspaceLabel})}</legend>
 				<br />
-				<div class="neos-row-fluid">
+				<div class="codeq-review-layout" data-review-navigation>
+					<nav class="codeq-review-sidebar" aria-labelledby="codeq-review-pages-title" aria-describedby="codeq-review-navigation-help">
+						<h2 id="codeq-review-pages-title">{neos:backend.translate(id: 'navigation.pages', source: 'Main', package: 'CodeQ.WorkspaceReview')}</h2>
+						<ul class="codeq-review-sidebar__list">
+							<f:for each="{siteChanges}" as="site">
+								<f:for each="{site.pages}" key="dimension" as="pages">
+									<f:for each="{pages}" as="page">
+										<li class="codeq-review-sidebar__item" style="--codeq-review-depth: {page.depth}">
+											<f:comment>Rows mirror the backend page tree: chevron for pages with
+											listed subpages, node type icon, label. Changed pages carry the
+											tree's orange "unpublished changes" edge; unchanged ancestors are
+											plain text.</f:comment>
+											<f:if condition="{page.document}">
+												<f:then>
+													<a class="codeq-review-sidebar__link" href="#review-page-{page.node.identifier}-{dimension}">
+														<f:render section="treeRow" arguments="{page: page}" />
+														<f:if condition="{contentDimensions}">
+															<span class="codeq-review-sidebar__dimensions"><f:render partial="Module/Shared/NodeContentDimensionsInformation" arguments="{contentDimensions: contentDimensions, node: page.node}" /></span>
+														</f:if>
+													</a>
+												</f:then>
+												<f:else>
+													<span class="codeq-review-sidebar__ancestor" title="{neos:backend.translate(id: 'navigation.unchangedPage', source: 'Main', package: 'CodeQ.WorkspaceReview')}">
+														<f:render section="treeRow" arguments="{page: page}" />
+													</span>
+												</f:else>
+											</f:if>
+										</li>
+									</f:for>
+								</f:for>
+							</f:for>
+						</ul>
+						<p id="codeq-review-navigation-help" class="codeq-review-sidebar__help">
+							<span class="codeq-review-sidebar__key"><kbd>↑</kbd><kbd>↓</kbd> {neos:backend.translate(id: 'navigation.help.move', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+							<span class="codeq-review-sidebar__key"><kbd>↵</kbd> {neos:backend.translate(id: 'navigation.help.review', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+							<span class="codeq-review-sidebar__key"><kbd>Esc</kbd> {neos:backend.translate(id: 'navigation.help.back', source: 'Main', package: 'CodeQ.WorkspaceReview')}</span>
+						</p>
+					</nav>
+					<div class="codeq-review-stream">
 					<table class="neos-table codeq-review-table">
 						<thead>
-						<tr>
-							<th class="check neos-priority1" style="width: 30px">
+						<tr class="codeq-review-toolbar">
+							<th class="check neos-priority1">
 								<label for="check-all" class="neos-checkbox">
 									<input type="checkbox" id="check-all" /><span></span>
 								</label>
 							</th>
-							<th>{neos:backend.translate(id: 'workspaces.selectAllCurrentChanges', source: 'Modules', package: 'Neos.Neos')}</th>
+							<th><label for="check-all">{neos:backend.translate(id: 'workspaces.selectAllCurrentChanges', source: 'Modules', package: 'Neos.Neos')}</label></th>
 							<th class="neos-action"></th>
 						</tr>
 						</thead>
-						<tbody>
 						<f:for each="{siteChanges}" as="site">
-							<f:for each="{site.documents}" key="dimension" as="dimensions">
-								<f:for each="{dimensions}" key="documentPath" as="document">
-									<tr class="neos-document" data-nodepath="{document.documentNode.path}" data-identifier="{document.documentNode.identifier}" data-ismoved="{f:if(condition: document.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: document.isNew, then: 'true', else: 'false')}">
+							<f:for each="{site.pages}" key="dimension" as="pages">
+								<f:for each="{pages}" as="page">
+									<f:if condition="{page.document}">
+									<f:alias map="{document: page.document}">
+									<tbody class="codeq-review-page">
+									<tr id="review-page-{document.documentNode.identifier}-{dimension}" tabindex="-1" class="neos-document codeq-review-page__header" data-nodepath="{document.documentNode.path}" data-identifier="{document.documentNode.identifier}" data-ismoved="{f:if(condition: document.isMoved, then: 'true', else: 'false')}" data-isnew="{f:if(condition: document.isNew, then: 'true', else: 'false')}">
 										<td class="check neos-priority1">
 											<label for="check-document-{document.documentNode.identifier}" class="neos-checkbox"><f:form.checkbox id="check-document-{document.documentNode.identifier}" class="neos-check-document" value="{document.documentNode.identifier}"/><span></span></label>
 										</td>
 										<td class="neos-priority1 path-caption">
-										<div class="neos-row-fluid">
-											<div class="neos-span2">
-												{neos:backend.translate(id: 'pathCaption', source: 'Main', package: 'Neos.Neos')}:
-												<f:render partial="Module/Shared/DocumentBreadcrumb" arguments="{node: document.documentNode, showIcon: true}"></f:render>
+										<div class="codeq-review-page__caption">
+											<div class="codeq-review-page__text">
+												<div class="codeq-review-page__title"><review:cleanLabel value="{document.documentNode.label}" /></div>
+												<div class="codeq-review-page__path">
+													<f:render partial="Module/Shared/DocumentBreadcrumb" arguments="{node: document.documentNode, showIcon: true}"></f:render>
+													<f:if condition="{contentDimensions}">
+														<span class="codeq-review-page__dimensions"><f:render partial="Module/Shared/NodeContentDimensionsInformation" arguments="{contentDimensions: contentDimensions, node: document.documentNode}" /></span>
+													</f:if>
+												</div>
 												<f:if condition="{document.summary}">
 													<div class="codeq-review-summary">{document.summary}</div>
 												</f:if>
 											</div>
 
-											<div class="neos-span2 neos-pull-right neos-aRight">
+											<div class="codeq-review-page__actions">
 												<f:if condition="{document.documentNode.removed}">
 													<f:else>
 														<neos:link.node node="{document.documentNode}" absolute="1" target="neosPreview" class="neos-button" title="{neos:backend.translate(id: 'workspaces.openPageInWorkspace', source: 'Modules', package: 'Neos.Neos', value: 'Open page in \"{0}\" workspace', arguments: {0: selectedWorkspaceLabel})}" additionalAttributes="{data-neos-toggle: 'tooltip'}"><i class="fas fa-external-link-alt icon-white"></i></neos:link.node><button form="postHelper" formaction="{f:uri.action(action: 'rebaseAndRedirect', arguments: {targetNode: document.documentNode, targetWorkspace: selectedWorkspace})}" type="submit" class="neos-button" title="{neos:backend.translate(id: 'edit', source: 'Main', package: 'Neos.Neos', value: 'Edit')}" data-neos-toggle="tooltip"><i class="fas fa-pencil-alt icon-white"></i></button>
@@ -65,32 +111,37 @@
 											<f:render partial="Module/Management/Workspaces/ContentChangeDiff" arguments="{change: change, contentDimensions: contentDimensions}"/>
 											</td>
 											<td class="neos-action">
+												<div class="codeq-review-actions">
 												<f:if condition="{canPublishToBaseWorkspace}">
 													<f:if condition="{document.isNew}">
 														<f:then>
-															<div class="neos-button neos-disabled neos-button-primary neos-pull-right"
+															<div class="neos-button neos-disabled neos-button-primary"
 																 title="{neos:backend.translate(id: 'cantPublishSingleNodeInNewPage', source: 'Main', package: 'Neos.Neos')}">
 																<i class="fas fa-check icon-white"></i>
 															</div>
 														</f:then>
 														<f:else>
-															<button form="postHelper" formaction="{f:uri.action(action: 'publishNode', arguments: {node: change.node.contextPath, selectedWorkspace: selectedWorkspace})}" type="submit" class="neos-button neos-button-primary neos-pull-right" title="{neos:backend.translate(id: 'publish', source: 'Main', package: 'Neos.Neos')}" data-neos-toggle="tooltip">
+															<button form="postHelper" formaction="{f:uri.action(action: 'publishNode', arguments: {node: change.node.contextPath, selectedWorkspace: selectedWorkspace})}" type="submit" class="neos-button neos-button-primary" title="{neos:backend.translate(id: 'publish', source: 'Main', package: 'Neos.Neos')}" data-neos-toggle="tooltip">
 																<i class="fas fa-check icon-white"></i>
 															</button>
 														</f:else>
 													</f:if>
 												</f:if>
-												<button form="postHelper" formaction="{f:uri.action(action: 'discardNode', arguments: {node: change.node.contextPath, selectedWorkspace: selectedWorkspace})}" type="submit" class="neos-button neos-button-danger neos-pull-right" title="{neos:backend.translate(id: 'discard', source: 'Main', package: 'Neos.Neos')}" data-neos-toggle="tooltip" data-placement="bottom">
+												<button form="postHelper" formaction="{f:uri.action(action: 'discardNode', arguments: {node: change.node.contextPath, selectedWorkspace: selectedWorkspace})}" type="submit" class="neos-button neos-button-danger" title="{neos:backend.translate(id: 'discard', source: 'Main', package: 'Neos.Neos')}" data-neos-toggle="tooltip" data-placement="bottom">
 													<i class="fas fa-trash-alt icon-white"></i>
 												</button>
+												</div>
 											</td>
 										</tr>
 									</f:for>
+									</tbody>
+									</f:alias>
+									</f:if>
 								</f:for>
 							</f:for>
 						</f:for>
-						</tbody>
 					</table>
+					</div>
 				</div>
 				<f:render section="actions" arguments="{_all}" />
 			</f:form>
@@ -202,6 +253,12 @@
 			</div>
 		</f:else>
 	</f:if>
+</f:section>
+
+<f:section name="treeRow">
+	<span class="codeq-review-sidebar__chevron"><f:if condition="{page.hasChildren}"><i class="fas fa-caret-down"></i></f:if></span>
+	<span class="codeq-review-sidebar__icon"><i class="{review:nodeTypeIcon(icon: page.node.nodeType.fullConfiguration.ui.icon)}"></i></span>
+	<span class="codeq-review-sidebar__label"><review:cleanLabel value="{page.node.label}" /></span>
 </f:section>
 
 <f:section name="actions">

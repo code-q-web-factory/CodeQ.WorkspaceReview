@@ -162,7 +162,8 @@ class WorkspacesController extends NeosWorkspacesController
 
     /**
      * Adds a human-readable per-document change summary on top of the site
-     * changes computed by the core controller.
+     * changes computed by the core controller, and a "pages" list per
+     * dimension that orders the changed documents like the page tree.
      *
      * @param Workspace $selectedWorkspace
      * @return array
@@ -173,11 +174,54 @@ class WorkspacesController extends NeosWorkspacesController
         foreach ($siteChanges as $siteKey => $site) {
             foreach ($site['documents'] as $dimension => $documents) {
                 foreach ($documents as $documentPath => $document) {
-                    $siteChanges[$siteKey]['documents'][$dimension][$documentPath]['summary'] = $this->renderDocumentSummary($document);
+                    $documents[$documentPath]['summary'] = $this->renderDocumentSummary($document);
                 }
+                $siteChanges[$siteKey]['documents'][$dimension] = $documents;
+                $siteChanges[$siteKey]['pages'][$dimension] = $this->computePageTree($documents);
             }
         }
         return $siteChanges;
+    }
+
+    /**
+     * Flattens the changed documents of one site and dimension into page-tree
+     * order. Unchanged pages between the site and a changed page are listed
+     * as ancestors, so the index reads as a tree rather than as a list of
+     * paths. Each entry carries the node, its depth below the site and, for a
+     * changed page, the document array; ancestors carry no document. Entries
+     * followed by a deeper entry are flagged as having children.
+     *
+     * @param array $documents changed documents keyed by their path below the site node
+     * @return array
+     */
+    protected function computePageTree(array $documents): array
+    {
+        $entries = [];
+        foreach ($documents as $documentPath => $document) {
+            $segments = $documentPath === '' ? [] : explode('/', (string)$documentPath);
+            $node = $document['documentNode'];
+            for ($depth = count($segments) - 1; $depth >= 1; $depth--) {
+                $node = $node->getParent();
+                $ancestorPath = implode('/', array_slice($segments, 0, $depth));
+                // A changed or already listed ancestor has had its own ancestors listed.
+                if ($node === null || isset($documents[$ancestorPath]) || isset($entries[$ancestorPath])) {
+                    break;
+                }
+                $entries[$ancestorPath] = ['node' => $node, 'depth' => $depth, 'document' => null];
+            }
+            $entries[$documentPath] = ['node' => $document['documentNode'], 'depth' => count($segments), 'document' => $document];
+        }
+        // Sort the separator below every other character so "blog/post" follows
+        // "blog" directly instead of "blog-archive".
+        uksort($entries, function ($a, $b): int {
+            return strcmp(str_replace('/', "\0", (string)$a), str_replace('/', "\0", (string)$b));
+        });
+        $entries = array_values($entries);
+        // Like the backend page tree, only pages with listed subpages get a chevron.
+        foreach ($entries as $index => $entry) {
+            $entries[$index]['hasChildren'] = isset($entries[$index + 1]) && $entries[$index + 1]['depth'] > $entry['depth'];
+        }
+        return $entries;
     }
 
     /**

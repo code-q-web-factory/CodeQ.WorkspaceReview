@@ -2,6 +2,22 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
     <file original="" product-name="CodeQ.WorkspaceReview" source-language="en" datatype="plaintext">
         <body>
+            <trans-unit id="navigation.pages" xml:space="preserve">
+                <source>Changed pages</source>
+            </trans-unit>
+            <trans-unit id="navigation.help.move" xml:space="preserve">
+                <source>previous / next page</source>
+            </trans-unit>
+            <trans-unit id="navigation.help.review" xml:space="preserve">
+                <source>review page</source>
+            </trans-unit>
+            <trans-unit id="navigation.help.back" xml:space="preserve">
+                <source>back to the list</source>
+            </trans-unit>
+            <trans-unit id="navigation.unchangedPage" xml:space="preserve">
+                <source>Unchanged page with changed subpages</source>
+            </trans-unit>
+
             <trans-unit id="status.created" xml:space="preserve">
                 <source>created</source>
             </trans-unit>

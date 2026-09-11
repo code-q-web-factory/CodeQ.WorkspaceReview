@@ -3,7 +3,11 @@
 {namespace review=CodeQ\WorkspaceReview\ViewHelpers}
 <div class="codeq-review-change">
     <div class="codeq-review-change__header">
-        <span class="codeq-review-change__label" title="{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}" data-neos-toggle="tooltip"><review:cleanLabel value="{change.node.label}" /></span>
+        <span class="codeq-review-change__label"><review:cleanLabel value="{change.node.label}" /></span>
+        <f:comment>The node label is usually the element's own text, so the
+        element type is named next to it: "Minimalismus" alone does not tell
+        a reviewer that a headline was hidden.</f:comment>
+        <span class="codeq-review-change__type">{f:if(condition: change.node.nodeType.label, then: '{neos:backend.translate(id: change.node.nodeType.label)}', else: '{change.node.nodeType.name}')}</span>
         <f:comment>The status labels come from this package: the German targets of
         Neos.Neos "workspaces.legend.moved", ".hidden" and ".edited" all read
         "erstellt", which would label a hidden element as a created one.</f:comment>

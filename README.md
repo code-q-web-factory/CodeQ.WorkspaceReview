@@ -13,6 +13,8 @@ The package changes only the controller and review rendering. Publishing, discar
 
 ## Improvements at a glance
 
+- **Jump between changed pages.** A sticky left sidebar lists the changed pages as a tree styled like the backend page tree, with their content dimension. The current page stays highlighted as you scroll, and each page is a separate block in the review.
+
 - **Configurations become visible.** Select boxes, toggles and references use translated editor labels instead of raw stored values.
 - **Page summaries speed up review.** Each document shows a compact summary of its text, media, setting, link, visibility and element changes.
 - **Word-level diffs reduce noise.** Reviewers see the changed words instead of comparing two complete paragraphs. Long unchanged passages collapse to an ellipsis. Deleted words are struck through and added words underlined, so the diff does not rely on colour alone.
@@ -46,7 +48,15 @@ Every changed node becomes one card with one entry for each effect publishing wo
 | Note         | nothing renderable changed                                                   | an explanation of the remaining difference                          |
 
 
-The card header shows whether the node was created, deleted, moved or hidden. Only changed words are marked in the card body.
+The card header names the element type next to the node label, because the label is usually the element’s own text ("Minimalismus" alone does not say that a headline was hidden), and shows whether the node was created, deleted, moved or hidden. Only changed words are marked in the card body.
+
+### Page navigation
+
+The sidebar shows the changed pages in the order and nesting of the page tree, with the node type icons, indentation and colours of the backend page tree; changed pages carry its orange "unpublished changes" edge. An unchanged page between the site and a changed subpage is listed greyed and without a link, so the structure stays readable. Click a page to jump to its changes, or scroll the review normally with the mouse wheel. The sidebar follows the current page without moving keyboard focus. On smaller screens the index appears above the review.
+
+Tab into the sidebar, then use **↑ / ↓** or **J / K** to jump between pages and **Home / End** for the first or last page. **Enter** focuses the page in the review stream; the same navigation keys work there, and **Escape** returns to its sidebar entry. Tab continues into the page’s existing controls. Shortcuts apply only while a page heading or sidebar link has focus, so they do not interfere with forms or browser shortcuts.
+
+Each content-dimension variant has its own destination. Links also work as ordinary anchors when JavaScript is disabled.
 
 ## Detailed behavior
 
@@ -108,7 +118,7 @@ These distinctions help reviewers decide whether they need to open the preview o
 ## Tests
 
 ```bash
-ddev exec bin/phpunit --configuration UnitTests.xml \
+ddev exec bin/phpunit --configuration Build/BuildEssentials/PhpUnit/UnitTests.xml \
   DistributionPackages/CodeQ.WorkspaceReview/Tests/Unit
 ```
 

@@ -4,7 +4,8 @@
 
 .codeq-review-change {
     white-space: normal;
-    padding: 2px 0 4px;
+    padding: 10px 0 8px;
+    line-height: 20px;
 }
 
 /* header ------------------------------------------------------------------ */
@@ -14,7 +15,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    padding: 6px 0 10px;
+    padding: 0 0 8px;
 }
 
 .codeq-review-change__header > i {
@@ -25,10 +26,23 @@
 .codeq-review-change__label {
     font-size: 14px;
     font-weight: 600;
+    line-height: 20px;
     color: #141414;
     max-width: 52ch;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Names the element type ("Headline"), because the label is usually the
+   element's own text and does not say what kind of element changed. */
+.codeq-review-change__type {
+    padding: 1px 8px;
+    border: 1px solid #d2d2d2;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #6f6f6f;
     white-space: nowrap;
 }
 
@@ -278,10 +292,414 @@
     font-style: italic;
 }
 
-/* document rows ----------------------------------------------------------- */
+/* layout: page index beside the review stream -------------------------- */
+
+.codeq-review-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    margin-top: 4px;
+}
+
+.codeq-review-stream {
+    min-width: 0;
+}
+
+/* page index (sidebar) ---------------------------------------------------- */
+
+.codeq-review-sidebar {
+    position: sticky;
+    top: 56px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 56px - 96px);
+    box-sizing: border-box;
+    border: 1px solid #3f3f3f;
+    background: #222;
+    color: #fff;
+}
+
+.neos.neos-module .codeq-review-sidebar h2 {
+    margin: 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid #3f3f3f;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #adadad;
+}
+
+.neos.neos-module .codeq-review-sidebar__list {
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+}
+
+.codeq-review-sidebar__item {
+    --codeq-review-depth: 0;
+}
+
+/* Rows copy the backend page tree (Neos.Neos.Ui): 24px rows, 18px per
+   level, a chevron column, a 2em icon column, the current page on #323232
+   with a blue label, and changed pages with the tree's orange edge. */
+.neos.neos-module .codeq-review-sidebar__link,
+.codeq-review-sidebar__ancestor {
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 24px;
+    padding: 0 8px 0 calc(18px + var(--codeq-review-depth) * 18px);
+    border-left: 2px solid transparent;
+    font-size: 14px;
+    line-height: 20px;
+    white-space: nowrap;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.neos.neos-module .codeq-review-sidebar__link {
+    border-left-color: #ff8700;
+}
+
+.neos.neos-module .codeq-review-sidebar__link:hover,
+.neos.neos-module .codeq-review-sidebar__link:focus {
+    color: #fff;
+    text-decoration: none;
+}
+
+.neos.neos-module .codeq-review-sidebar__link:hover .codeq-review-sidebar__label,
+.neos.neos-module .codeq-review-sidebar__link[aria-current] .codeq-review-sidebar__label {
+    color: #00adee;
+}
+
+.neos.neos-module .codeq-review-sidebar__link:hover .codeq-review-sidebar__icon,
+.neos.neos-module .codeq-review-sidebar__link[aria-current] .codeq-review-sidebar__icon {
+    color: #35c3f8;
+}
+
+.neos.neos-module .codeq-review-sidebar__link[aria-current] {
+    background: #323232;
+}
+
+.codeq-review-sidebar__ancestor {
+    color: #adadad;
+    cursor: default;
+}
+
+.codeq-review-sidebar__chevron {
+    position: absolute;
+    top: 0;
+    left: calc(3px + var(--codeq-review-depth) * 18px);
+    width: 18px;
+    line-height: 24px;
+    font-size: 12px;
+    text-align: center;
+    color: #adadad;
+}
+
+.codeq-review-sidebar__icon {
+    flex: 0 0 auto;
+    width: 2em;
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+    color: #fff;
+}
+
+.codeq-review-sidebar__ancestor .codeq-review-sidebar__icon {
+    color: #adadad;
+}
+
+.codeq-review-sidebar__label {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.codeq-review-sidebar__dimensions {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-left: 8px;
+    white-space: nowrap;
+}
+
+.neos.neos-module .codeq-review-sidebar__dimensions .neos-label,
+.neos.neos-module .codeq-review-page__dimensions .neos-label {
+    display: inline-block;
+    margin: 0;
+    padding: 0 6px;
+    border-radius: 2px;
+    background: #141414;
+    box-shadow: none;
+    font-size: 10px;
+    line-height: 16px;
+    letter-spacing: 0.04em;
+    color: #adadad;
+}
+
+.neos.neos-module .codeq-review-sidebar__help {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin: 0;
+    padding: 10px 16px;
+    border-top: 1px solid #3f3f3f;
+    font-size: 11px;
+    line-height: 16px;
+    color: #8c8c8c;
+}
+
+.codeq-review-sidebar__key {
+    white-space: nowrap;
+}
+
+.codeq-review-sidebar__help kbd {
+    display: inline-block;
+    min-width: 12px;
+    margin-right: 2px;
+    padding: 0 4px;
+    border: 1px solid #5b5b5b;
+    border-radius: 3px;
+    background: #141414;
+    font: 10px/14px "Noto Sans", sans-serif;
+    text-align: center;
+    color: #fff;
+}
+
+/* review stream (table) --------------------------------------------------- */
+
+.neos.neos-module .codeq-review-table {
+    width: 100%;
+    margin-bottom: 0;
+    table-layout: fixed;
+}
+
+.neos.neos-module .codeq-review-table td {
+    white-space: normal;
+}
+
+/* The core module keeps the checkbox against the left cell edge. Centre it
+   in its own column and align it with the first text line of the row, which
+   starts 10px below the cell edge in the toolbar, page and change rows. */
+.neos.neos-module .codeq-review-table th.check,
+.neos.neos-module .codeq-review-table td.check {
+    width: 44px;
+    padding: 0 !important;
+    text-align: center;
+    vertical-align: top;
+}
+
+.neos.neos-module .codeq-review-table .neos-checkbox {
+    display: inline-block;
+    min-height: 0;
+    margin: 10px 0 0;
+    padding: 0;
+    line-height: 0;
+    vertical-align: top;
+}
+
+.neos.neos-module .codeq-review-table .neos-checkbox input + span {
+    float: none;
+    display: block;
+    margin: 0;
+}
+
+/* Two 46px icon buttons plus their gap and margins. */
+.neos.neos-module .codeq-review-table th.neos-action {
+    width: 112px;
+}
+
+.neos.neos-module .codeq-review-table .codeq-review-toolbar th {
+    height: 40px;
+    padding: 0 16px 0 0;
+    vertical-align: middle;
+    font-weight: normal;
+    color: #adadad;
+}
+
+.neos.neos-module .codeq-review-table .codeq-review-toolbar th.check .neos-checkbox {
+    margin: 0;
+}
+
+.neos.neos-module .codeq-review-table .codeq-review-toolbar th label {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* Each page is one row group; a border in the page background colour keeps
+   the groups apart without leaving the single table. */
+.neos.neos-module .codeq-review-page > tr:first-child > td {
+    border-top: 12px solid #222;
+}
+
+.neos.neos-module .codeq-review-page + .codeq-review-page > tr:first-child > td {
+    border-top-width: 24px;
+}
+
+.codeq-review-table .neos-document {
+    scroll-margin-top: 56px;
+}
+
+.neos.neos-module .codeq-review-table td.path-caption {
+    padding: 0 16px 0 0 !important;
+    line-height: 20px;
+    overflow-wrap: anywhere;
+}
+
+.codeq-review-page__caption {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 10px 0;
+}
+
+.codeq-review-page__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.codeq-review-page__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #fff;
+}
+
+.codeq-review-page__path {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #adadad;
+}
+
+.codeq-review-page__path i {
+    margin: 0 2px;
+    font-size: 11px;
+}
 
 .codeq-review-summary {
-    margin-top: 3px;
+    margin-top: 4px;
     font-size: 12px;
-    color: #b5b5b5;
+    line-height: 18px;
+    color: #8c8c8c;
+}
+
+.codeq-review-page__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+.neos.neos-module .codeq-review-page__actions .neos-button {
+    margin: 0;
+}
+
+.neos.neos-module .codeq-review-table td.neos-content-change {
+    padding: 0 16px;
+}
+
+/* Publish / discard for one change sit side by side, aligned with the label
+   line of the card. */
+.codeq-review-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 0 8px;
+}
+
+.neos.neos-module .codeq-review-actions .neos-button {
+    float: none;
+    margin: 0;
+}
+
+/* The label takes the room the badges and date leave and yields to them
+   when the header gets tight, so a card header stays one line. A wrapping
+   flex line would break before the label shrinks, hence nowrap. */
+.codeq-review-table .codeq-review-change__header {
+    flex-wrap: nowrap;
+}
+
+.codeq-review-table .codeq-review-change__label {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: none;
+}
+
+.codeq-review-table .codeq-review-media__item img {
+    max-width: 100%;
+}
+
+.codeq-review-sidebar__link:focus-visible,
+.codeq-review-table .neos-document:focus-visible {
+    outline: 2px solid #00b5ff;
+    outline-offset: -2px;
+}
+
+/* module footer ----------------------------------------------------------- */
+
+/* The core footer floats its button groups inside a fixed 72px box. A flex
+   row keeps the buttons vertically centred at any width and lets a long
+   group wrap instead of being clipped. */
+.neos.neos-module .codeq-review-layout ~ .neos-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    height: auto;
+    min-height: 72px;
+    padding: 16px;
+}
+
+.neos.neos-module .codeq-review-layout ~ .neos-footer .neos-pull-left,
+.neos.neos-module .codeq-review-layout ~ .neos-footer .neos-pull-right {
+    float: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.neos.neos-module .codeq-review-layout ~ .neos-footer .neos-button {
+    margin: 0;
+}
+
+/* narrow screens ---------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .codeq-review-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .codeq-review-sidebar {
+        position: static;
+        max-height: 280px;
+    }
+}
+
+@media (max-width: 600px) {
+    .codeq-review-table .codeq-review-property {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .codeq-review-page__caption {
+        flex-wrap: wrap;
+    }
 }
