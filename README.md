@@ -1,8 +1,6 @@
 # CodeQ.WorkspaceReview
 
-## Understand exactly what will change before publishing a Neos workspace.
-
-CodeQ.WorkspaceReview groups unpublished changes by page, explains each edit in a readable change list and shows changes directly in the page layout. Reviewers can navigate the page tree, work through changes from the keyboard and keep track of which pages they have checked.
+**Understand exactly what will change before publishing a Neos workspace.**
 
 ![Neos Core workspace review compared with the improved review, with annotations highlighting readable configuration, word-level diffs, statuses, explanations, links and formatting](Documentation/workspace-review-comparison.png)
 
